@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel de Pedidos – Bolo de Pote</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f3f4f6;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar overlay */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 250px; height: 100vh;
+      background: #1f2937;
+      color: #e5e7eb;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+      display: flex; flex-direction: column;
+    }
+    .sidebar.active { transform: translateX(0); }
+
+    .sidebar .header {
+      display: flex; align-items: center; padding: 15px;
+    }
+    .sidebar .header i {
+      font-size: 1.5rem; cursor: pointer;
+    }
+    .sidebar .header .title {
+      margin-left: 10px; font-weight: bold;
+    }
+
+    .sidebar .business {
+      padding: 0 15px 15px;
+      border-bottom: 1px solid #374151;
+    }
+
+    .sidebar nav {
+      flex: 1;
+      display: flex; flex-direction: column;
+    }
+    .sidebar .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 15px; color: inherit; text-decoration: none;
+      transition: background 0.2s;
+    }
+    .sidebar .nav-link i {
+      font-size: 1.2rem; width: 24px; text-align: center;
+    }
+    .sidebar .nav-link:hover,
+    .sidebar .nav-link.active {
+      background: #3b82f6; color: #fff;
+    }
+
+    .sidebar .footer {
+      padding: 15px;
+      border-top: 1px solid #374151;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .sidebar .footer .actions i {
+      font-size: 1.2rem; color: #e5e7eb; margin-left: 8px;
+    }
+
+    /* Overlay backdrop */
+    .overlay {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.3s;
+      z-index: 500;
+    }
+    .overlay.show { opacity: 1; visibility: visible; }
+
+    /* Main content static */
+    .main-content { padding: 20px; margin-left: 0; transition: margin-left .3s; }
+    .cards-container { display: flex; flex-wrap: wrap; gap: 20px; }
+    .pedido-card {
+      background: #fff; border-radius: 10px; padding: 15px;
+      border: 3px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      flex: 1 1 300px; display: flex; flex-direction: column;
+    }
+    .status-recebido { border-color: #f1c40f !important; }
+    .status-pronto   { border-color: #2ecc71 !important; }
+    .status-cancelado{ border-color: #e74c3c !important; }
+    .btn-status { margin-right: 5px; }
+    .btn-detalhes { margin-top: 10px; background: #3b82f6; color: #fff; border: none; padding: 6px 12px; border-radius: 5px; }
+    .detalhes-pedido { display: none; background: #f4f4f4; padding: 10px; margin-top: 10px; border-radius: 5px; }
+
+    @media (min-width: 768px) {
+      .sidebar, .sidebar.active { transform: translateX(0); }
+      .mobile-toggle, .overlay { display: none; }
+      .main-content { margin-left: 250px; }
+    }
+    @media (max-width: 768px) {
+      .mobile-toggle {
+        position: fixed; top: 10px; left: 10px;
+        background: #1f2937; color: #fff;
+        border: none; padding: 8px;
+        font-size: 1.2rem; border-radius: 4px;
+        z-index: 1100; cursor: pointer;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile toggle -->
+  <button class="btn btn-dark d-md-none mobile-toggle" onclick="toggleSidebar()">
+    <i class="bi bi-list"></i>
+  </button>
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="header">
+      <i class="bi bi-x" onclick="toggleSidebar()"></i>
+      <div class="title">Giovane Ferreira</div>
+    </div>
+    <div class="business">Bolo de Pote</div>
+    <nav>
+      <a href="#" class="nav-link active" onclick="mostrarSecao('orders')">
+        <i class="bi bi-basket2-fill"></i><span>Pedidos / PDV</span>
+      </a>
+      <a href="#" class="nav-link" onclick="mostrarSecao('clients')">
+        <i class="bi bi-people-fill"></i><span>Clientes</span>
+      </a>
+      <a href="#" class="nav-link" onclick="mostrarSecao('qrcode')">
+        <i class="bi bi-printer-fill"></i><span>Imprimir QrCode</span>
+      </a>
+      <a href="#" class="nav-link" onclick="mostrarSecao('menu')">
+        <i class="bi bi-card-list"></i><span>Cardápio</span>
+      </a>
+      <a href="#" class="nav-link" onclick="mostrarSecao('boost')">
+        <i class="bi bi-megaphone-fill"></i><span>Impulsionar</span>
+      </a>
+    </nav>
+    <div class="footer">
+      <div class="version">Versão: 1.0.0.0</div>
+      <div class="actions">
+        <i class="bi bi-gear-fill"></i>
+        <i class="bi bi-box-arrow-right"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Pedidos Section -->
+    <section id="orders" class="cards-container">
+      <div class="pedido-card status-recebido">
+        <h5>Pedido #1001</h5>
+        <p><strong>Cliente:</strong> Sabrina Correa </p>
+        <p><strong>Valor:</strong> R$ 30,00</p>
+        <p><strong>Horário:</strong> 16:30</p>
+        <div>
+          <button class="btn btn-sm btn-status active">Recebido</button>
+          <button class="btn btn-sm btn-status">Pronto</button>
+          <button class="btn btn-sm btn-status">Cancelado</button>
+        </div>
+        <button class="btn-detalhes" onclick="toggleDetalhes(this)">Exibir detalhes</button>
+        <div class="detalhes-pedido">
+          <p><strong>Itens:</strong> 2x Panquecas ( Carne)</p>
+          <p><strong>Pagamento:</strong> Dinheiro</p>
+        </div>
+      </div>
+      <div class="pedido-card status-pronto">
+        <h5>Pedido #1002</h5>
+        <p><strong>Cliente:</strong> João Souza</p>
+        <p><strong>Valor:</strong> R$ 45,00</p>
+        <p><strong>Horário:</strong> 16:45</p>
+        <div>
+          <button class="btn btn-sm btn-status">Recebido</button>
+          <button class="btn btn-sm btn-status active">Pronto</button>
+          <button class="btn btn-sm btn-status">Cancelado</button>
+        </div>
+        <button class="btn-detalhes" onclick="toggleDetalhes(this)">Exibir detalhes</button>
+        <div class="detalhes-pedido">
+          <p><strong>Itens:</strong> 3x Bolo de Pote (Chocolate, Limão, Maracujá)</p>
+          <p><strong>Pagamento:</strong> Pix</p>
+        </div>
+      </div>
+      <div class="pedido-card status-cancelado">
+        <h5>Pedido #1003</h5>
+        <p><strong>Cliente:</strong> Beatriz Rocha</p>
+        <p><strong>Valor:</strong> R$ 20,00</p>
+        <p><strong>Horário:</strong> 17:00</p>
+        <div>
+          <button class="btn btn-sm btn-status">Recebido</button>
+          <button class="btn btn-sm btn-status">Pronto</button>
+          <button class="btn btn-sm btn-status active">Cancelado</button>
+        </div>
+        <button class="btn-detalhes" onclick="toggleDetalhes(this)">Exibir detalhes</button>
+        <div class="detalhes-pedido">
+          <p><strong>Itens:</strong> 1x Bolo de Pote (Prestígio)</p>
+          <p><strong>Pagamento:</strong> Dinheiro</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Clientes Section -->
+    <section id="clients" style="display:none;">
+      <h2>Histórico de Clientes</h2>
+      <div class="cards-container">
+        <div class="pedido-card">
+          <h5>Cliente: Ana Souza</h5>
+          <p><strong>Telefone:</strong> (11) 91234-5678</p>
+          <p><strong>Endereço:</strong> Rua das Flores, 123</p>
+          <p><strong>Último Pedido:</strong> Chocolate com Morango</p>
+          <p><strong>Data:</strong> 25/04/2025</p>
+          <button class="btn-detalhes" onclick="toggleDetalhes(this)">Ver Mais</button>
+          <div class="detalhes-pedido">
+            <ul>
+              <li>20/04/2025 – Doce de Leite</li>
+              <li>15/04/2025 – Ninho com Nutella</li>
+            </ul>
+          </div>
+        </div>
+        <div class="pedido-card">
+          <h5>Cliente: Bruno Lima</h5>
+          <p><strong>Telefone:</strong> (11) 99876-5432</p>
+          <p><strong>Endereço:</strong> Av. Paulista, 456</p>
+          <p><strong>Último Pedido:</strong> Red Velvet</p>
+          <p><strong>Data:</strong> 24/04/2025</p>
+          <button class="btn-detalhes" onclick="toggleDetalhes(this)">Ver Mais</button>
+          <div class="detalhes-pedido">
+            <ul>
+              <li>10/04/2025 – Brigadeiro</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- QRCode Section -->
+    <section id="qrcode" style="display:none;">
+      <h2>Imprimir QR Code</h2>
+      <div id="qrcode-container"></div>
+      <button class="btn btn-secondary" onclick="mostrarSecao('orders')">Voltar</button>
+    </section>
+
+    <!-- Cardápio Section -->
+    <section id="menu" style="display:none;">
+      <h2>Cardápio</h2>
+      <ul>
+        <li>Chocolate com Morango</li>
+        <li>Red Velvet</li>
+        <li>Brigadeiro</li>
+        <li>Ninho com Nutella</li>
+        <li>Doce de Leite</li>
+      </ul>
+      <button class="btn btn-secondary" onclick="mostrarSecao('orders')">Voltar</button>
+    </section>
+
+    <!-- Impulsionar Section -->
+    <section id="boost" style="display:none;">
+      <h2>Impulsionar Pedido</h2>
+      <p>Escolha o produto e inicie sua campanha de marketing.</p>
+      <button class="btn btn-secondary" onclick="mostrarSecao('orders')">Voltar</button>
+    </section>
+  </div>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('active');
+      document.getElementById('overlay').classList.toggle('show');
+    }
+    function toggleDetalhes(btn) {
+      const d = btn.nextElementSibling;
+      d.style.display = d.style.display==='block'?'none':'block';
+      btn.textContent = d.style.display==='block'?'Ocultar detalhes':'Exibir detalhes';
+    }
+    function mostrarSecao(id) {
+      ['orders','clients','qrcode','menu','boost'].forEach(s => {
+        document.getElementById(s).style.display = s===id 
+          ? (s==='orders'?'flex':'block') 
+          : 'none';
+      });
+      document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
+      document.querySelector(`.nav-link[onclick*="${id}"]`).classList.add('active');
+      if (window.innerWidth <= 768) toggleSidebar();
+    }
+  </script>
+</body>
+</html>

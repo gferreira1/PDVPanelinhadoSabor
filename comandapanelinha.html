@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel de Pedidos – Bolo de Pote</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --sidebar-width: 250px;
+      --sidebar-width-collapsed: 70px;
+      --bg-color: #1f2937;
+      --item-bg: #374151;
+      --item-hover: #4b5563;
+      --accent: #3b82f6;
+      --text-light: #e5e7eb;
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      background: #f3f4f6;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* === SIDEBAR === */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--bg-color);
+      color: var(--text-light);
+      display: flex;
+      flex-direction: column;
+      transition: width .3s;
+      overflow: hidden;
+      z-index: 1000;
+    }
+    .sidebar.collapsed { width: var(--sidebar-width-collapsed); }
+
+    /* Header com botão e título */
+    .sidebar .header {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      gap: 0.5rem;
+    }
+    .sidebar .header button {
+      background: none;
+      border: none;
+      color: var(--text-light);
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    .sidebar .header .title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      white-space: nowrap;
+      transition: opacity .3s;
+    }
+    .sidebar.collapsed .header .title { opacity: 0; }
+
+    /* Seção “Negócios” */
+    .sidebar .business {
+      padding: 0 1rem 1rem;
+      border-bottom: 1px solid #374151;
+    }
+    .sidebar .business .name,
+    .sidebar .business .subtitle {
+      white-space: nowrap;
+      transition: opacity .3s;
+    }
+    .sidebar .business .name { font-weight: 600; }
+    .sidebar .business .subtitle { font-size: .75rem; color: #9ca3af; }
+    .sidebar.collapsed .business .name,
+    .sidebar.collapsed .business .subtitle { opacity: 0; }
+
+    /* Itens do menu */
+    .sidebar nav .nav-link {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .75rem 1rem;
+      color: var(--text-light);
+      background: var(--item-bg);
+      margin: .25rem 1rem;
+      border-radius: .5rem;
+      text-decoration: none;
+      transition: background .2s, color .2s;
+    }
+    .sidebar nav .nav-link i {
+      font-size: 1.2rem;
+      min-width: 1.2rem;
+      text-align: center;
+    }
+    .sidebar nav .nav-link span {
+      white-space: nowrap;
+      transition: opacity .3s;
+    }
+    .sidebar nav .nav-link:hover { background: var(--item-hover); }
+    .sidebar nav .nav-link.active { background: var(--accent); color: #fff; }
+    .sidebar.collapsed nav .nav-link span { opacity: 0; }
+
+    /* Footer versão e ícones */
+    .sidebar .footer {
+      margin-top: auto;
+      padding: 1rem;
+      border-top: 1px solid #374151;
+    }
+    .sidebar .footer .version {
+      font-size: .7rem;
+      color: #9ca3af;
+      transition: opacity .3s;
+    }
+    .sidebar.collapsed .footer .version { opacity: 0; }
+    .sidebar .footer .actions {
+      display: flex;
+      gap: .5rem;
+      margin-top: .5rem;
+    }
+    .sidebar .footer .actions a { color: var(--text-light); font-size: 1.2rem; }
+
+    /* Main content empurra */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 1.5rem;
+      width: 100%;
+      transition: margin-left .3s;
+    }
+    .main-content.collapsed { margin-left: var(--sidebar-width-collapsed); }
+
+    /* === CARDS DE PEDIDO === */
+    .pedido-card {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      border: 3px solid #ccc;
+      transition: 0.3s;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .status-recebido { border-color: #f1c40f !important; }
+    .status-pronto   { border-color: #2ecc71 !important; }
+    .status-cancelado{ border-color: #e74c3c !important; }
+    .pedido-info h5  { margin: 0 0 10px; font-size: 18px; }
+    .pedido-info p   { margin: 2px 0; font-size: 14px; }
+
+    .btn-status {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-status:hover:not(:disabled) {
+  transform: scale(1.03);
+}
+
+.btn-status:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Estilo para botão Comprar */
+.btn-status.buy {
+  background-color: #4CAF50; /* verde */
+}
+
+.btn-status.buy:hover:not(:disabled) {
+  background-color: #43a047;
+}
+
+/* Estilo para botão Reservar */
+.btn-status.reserve {
+  background-color: #2196F3; /* azul */
+}
+
+.btn-status.reserve:hover:not(:disabled) {
+  background-color: #1e88e5;
+}
+
+.detalhes-pedido {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease, margin-top 0.3s ease;
+  padding: 0 12px;
+  margin-top: 0;
+}
+
+.detalhes-pedido.show {
+  max-height: 500px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+
+    /* Ajustes icons collapsed */
+.sidebar.collapsed nav .nav-link {
+  width: 100%;
+  justify-content: center;
+  padding: 0.75rem 0;
+  margin: .25rem 0.5rem;
+}
+
+.sidebar.collapsed nav .nav-link i {
+  margin: 0 auto;
+  display: block;
+}
+
+.sidebar.collapsed nav .nav-link span {
+  display: none;
+}
+
+
+    /* =====================================
+   Estilo exclusivo para os Cards de Histórico de Clientes
+   ===================================== */
+
+/* Área dos cards dentro da seção de clientes */
+#clientsSection .cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+/* Cada card de cliente */
+#clientsSection .pedido-card {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  flex: 1 1 300px;
+  max-width: 350px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+#clientsSection .pedido-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Informações internas */
+#clientsSection .pedido-info h5 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+#clientsSection .pedido-info p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+/* Botão Ver Mais / Ver Menos */
+#clientsSection .btn-detalhes {
+  margin-top: 10px;
+  background-color: #42cdac;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#clientsSection .btn-detalhes:hover {
+  background-color: #36b59b;
+}
+
+/* Detalhes do pedido (escondido inicialmente) */
+#clientsSection .detalhes-pedido {
+  display: none;
+  margin-top: 15px;
+}
+
+/* Lista de pedidos anteriores */
+#clientsSection .detalhes-pedido ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+#clientsSection .detalhes-pedido li {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Botão Pedir Novamente */
+#clientsSection .detalhes-pedido button {
+  margin-left: 10px;
+  background-color: #bfc1d5;
+  color: #333;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#clientsSection .detalhes-pedido button:hover {
+  background-color: #a7a9ba;
+}
+
+.container-estoque {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  padding: 30px;
+  max-width: 1000px;
+  margin: 40px auto;
+}
+
+.header-estoque {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header-estoque h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.btn-fechar {
+  background-color: #ff5c5c;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-fechar:hover {
+  background-color: #e04848;
+}
+
+.tabela-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+thead {
+  background-color: #f2f2f2;
+}
+
+th, td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  font-weight: bold;
+  color: #333;
+}
+
+.acoes {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn:hover {
+  background-color: #45a049;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .container-estoque {
+    padding: 20px;
+  }
+
+  th, td {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .btn-fechar {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+/* Área dos coluna dentro da seção de pedidos */
+.status-columns {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  padding-bottom: 15px;
+}
+.status-column {
+  min-width: 300px;
+  flex: 1;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 15px;
+}
+.status-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: bold;
+}
+.recebido-header {
+  color: #856404;
+  background-color: #fff3cd;
+  padding: 8px;
+  border-radius: 5px;
+}
+.producao-header {
+  color: #004085;
+  background-color: #cce5ff;
+  padding: 8px;
+  border-radius: 5px;
+}
+.finalizado-header {
+  color: #155724;
+  background-color: #d4edda;
+  padding: 8px;
+  border-radius: 5px;
+}
+.pedido-card {
+  margin-bottom: 15px;
+}
+
+
+
+/* Estilos para as colunas */
+.status-columns {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  padding-bottom: 15px;
+}
+
+.status-column {
+  min-width: 320px;
+  flex: 1;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.status-header {
+  text-align: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.recebido-header {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.producao-header {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.finalizado-header {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+/* Estilos para os cards */
+.pedido-card {
+  background-color: white;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  border-left: 4px solid;
+}
+
+.status-recebido {
+  border-left-color: #ffc107;
+}
+
+.status-producao {
+  border-left-color: #0d6efd;
+}
+
+.status-finalizado {
+  border-left-color: #198754;
+}
+
+.detalhes-pedido {
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.pedido-actions .btn {
+  transition: all 0.2s;
+}
+
+/* Responsividade */
+@media (max-width: 992px) {
+  .status-column {
+    min-width: 280px;
+  }
+}
+
+
+.detalhes-pedido {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  padding: 0 12px;
+  margin-top: 0;
+}
+
+.detalhes-pedido.show {
+  max-height: 500px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.card-produto {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 4px; /* Pouquíssimo padding */
+  margin-bottom: 0; /* Sem margem inferior */
+  max-width: 220px;
+  box-shadow: none; /* Sem sombra para ficar mais limpo */
+  display: inline-block;
+  vertical-align: top;
+  text-align: center;
+  background-color: #fff;
+  transition: none;
+}
+
+.card-produto img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 2px; /* Margem mínima */
+}
+
+.card-produto strong {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 2px; /* Margem mínima */
+}
+
+.card-produto .preco {
+  font-weight: 600;
+  margin-bottom: 2px; /* Margem mínima */
+  color: #2c3e50;
+}
+
+.disponibilidade-label {
+  font-size: 0.85rem;
+  user-select: none;
+  margin-bottom: 2px;
+}
+
+.disponibilidade-label input {
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+#listaCardapio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px; /* Espaçamento pequeno entre cards */
+  justify-content: flex-start;
+}
+
+
+.btn-toggle {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+  color: white;
+}
+
+.btn-toggle.disponivel {
+  background-color: #28a745; /* verde */
+}
+
+.btn-toggle.indisponivel {
+  background-color: #6c757d; /* cinza escuro */
+}
+
+.btn-toggle:hover {
+  opacity: 0.85;
+}
+
+
+
+
+
+
+
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="header">
+      <button toggleSidebar onclick="toggleSidebar()">
+        <i class="bi bi-list"></i>
+      </button>
+    </div>
+
+    <div class="business">
+      <div class="name">Atendente </div>
+    </div>
+
+    <nav class="flex-column">
+      <a href="#" id="nav-produto" class="nav-link">
+        <i class="bi bi-basket2-fill"></i><span>Cadastrar Produtos</span>
+      </a>
+      <a href="#" id="nav-orders" class="nav-link active">
+        <i class="bi bi-basket2-fill"></i><span>Pedidos / PDV</span>
+      </a>
+      <a href="#" id="nav-clients" class="nav-link">
+        <i class="bi bi-people-fill"></i><span>Clientes</span>
+      </a>
+      <a href="#" class="nav-link">
+        <i class="bi bi-printer-fill"></i><span>Imprimir QrCode</span>
+      </a>
+      <a href="#" id="nav-cardapio" class="nav-link">
+        <i class="bi bi-card-list"></i><span>Cardápio</span>
+      </a>
+      <a href="#" class="nav-link">
+        <i class="bi bi-megaphone-fill"></i><span>Impulsionar</span>
+      </a>
+      <a href="#" id="nav-inventory" class="nav-link">
+        <i class="bi bi-stack"></i><span>Estoque</span>
+      </a>
+    </nav>
+
+    <div class="footer">
+      <div class="version">Versão: 1.0.0.0</div>
+      <div class="actions">
+        <a href="#"><i class="bi bi-gear-fill"></i></a>
+        <a href="#"><i class="bi bi-box-arrow-right"></i></a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <div class="main-content" id="mainContent">
+    <!-- Seção de Pedidos -->
+    <section id="ordersSection">
+      
+    </section>
+
+    <!-- Seção de Clientes -->
+    <section id="clientsSection" style="display:none;">
+      <div class="container-fluid">
+        <h2 class="mb-4">Histórico de Clientes</h2>
+    
+        <div class="cards-container">
+    
+          <div class="pedido-card">
+            <div class="pedido-info">
+              <h5>Cliente: Ana Souza</h5>
+              <p><strong>Telefone:</strong> (11) 91234-5678</p>
+              <p><strong>Endereço:</strong> Rua das Flores, 123</p>
+              <p><strong>Último Pedido:</strong> Chocolate com Morango</p>
+              <p><strong>Data:</strong> 25/04/2025</p>
+              <p><strong>Quantidade:</strong> 2</p>
+              <p><strong>Total Gasto:</strong> R$ 20,00</p>
+              <button class="btn btn-sm btn-outline-secondary btn-detalhes w-100" onclick="toggleDetalhes(this)">
+  <i class="bi bi-list-ul me-1"></i> Detalhes
+</button>
+
+    
+              <div class="detalhes-pedido">
+                <p><strong>Pedidos Anteriores:</strong></p>
+                <ul>
+                  <li>20/04/2025 – Doce de Leite </li>
+                  <li>15/04/2025 – Ninho com Nutella </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+    
+          <div class="pedido-card">
+            <div class="pedido-info">
+              <h5>Cliente: Bruno Lima</h5>
+              <p><strong>Telefone:</strong> (11) 99876-5432</p>
+              <p><strong>Endereço:</strong> Av. Paulista, 456</p>
+              <p><strong>Último Pedido:</strong> Red Velvet</p>
+              <p><strong>Data:</strong> 24/04/2025</p>
+              <p><strong>Quantidade:</strong> 1</p>
+              <p><strong>Total Gasto:</strong> R$ 10,00</p>
+              <button class="btn btn-sm btn-outline-secondary btn-detalhes w-100" onclick="toggleDetalhes(this)">
+  <i class="bi bi-list-ul me-1"></i> Detalhes
+</button>
+
+    
+              <div class="detalhes-pedido ${pedido.status.toLowerCase() !== 'finalizado' ? 'show' : ''}">
+                <p><strong>Pedidos Anteriores:</strong></p>
+                <ul>
+                  <li>10/04/2025 – Brigadeiro </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+    
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção de Imprimir QR Code -->
+<section id="qrcodeSection" style="display:none;">
+  <div class="container-fluid">
+      <h2 class="mb-4">QR Code do Pedido</h2>
+      <div id="qrcode-container"></div>
+      <button class="btn-close" onclick="fecharQRCodeSection()">Fechar</button>
+  </div>
+</section>
+
+<!-- Seção do Cardápio -->
+<section id="cardapioSection" style="display:none;">
+  <div class="container-fluid">
+    <h2 class="mb-4">Cardápio</h2>
+    <div id="listaCardapio" class="card-container">
+      <!-- Cards de produtos aqui -->
+    </div>
+  </div>
+</section>
+
+
+
+<!-- Seção de Impulsionar -->
+<section id="boostSection" style="display:none;">
+  <div class="container-fluid">
+      <h2 class="mb-4">Impulsionar Pedido</h2>
+      <p>Você pode impulsionar seu pedido aqui! Escolha o produto e adicione à sua campanha de marketing.</p>
+      <button class="btn-close" onclick="fecharBoostSection()">Fechar</button>
+  </div>
+</section>
+
+<!-- Seção de Inventario -->
+<section id="inventorySection" style="display: none;">
+  <div class="container-fluid">
+    <h2 class="mb-4">Controle de Estoque</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>Produto</th><th>Estoque</th><th>Reservado</th><th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="inventoryBody">
+        <!-- Linhas serão inseridas pelo JS -->
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Seção Cadastrar Produto -->
+<section id="ProdutoSection" style="display: none;">
+  <div class="container">
+    <h2 class="mb-4">Cadastrar Produto</h2>
+    <form id="formProduto">
+      
+      <!-- Nome do Produto -->
+      <div class="mb-3">
+        <label for="nomeProduto" class="form-label">Nome do Produto</label>
+        <input type="text" class="form-control" id="nomeProduto" placeholder="Ex: Bolo de Pote de Limão" required>
+      </div>
+
+      <!-- Preço -->
+      <div class="mb-3">
+        <label for="precoProduto" class="form-label">Preço (R$)</label>
+        <input type="number" class="form-control" id="precoProduto" step="0.01" min="0" placeholder="Ex: 12.00" required>
+      </div>
+
+      <!-- Imagem do Produto -->
+      <div class="mb-3">
+        <label for="imagemProduto" class="form-label">Imagem do Produto</label>
+        <input type="file" class="form-control" id="imagemProduto" accept="image/*" required>
+      </div>
+
+      <!-- Categoria -->
+      <div class="mb-3">
+        <label for="categoriaProduto" class="form-label">Categoria</label>
+        <select class="form-select" id="categoriaProduto" required>
+          <option value="">Selecione...</option>
+          <option value="Bolo de Pote">Bolo de Pote</option>
+          <option value="Torta">Torta</option>
+          <option value="Bebida">Bebida</option>
+        </select>
+      </div>
+
+      <!-- Botões -->
+      <div class="d-flex justify-content-between">
+        <button type="button" class="btn btn-outline-secondary" onclick="setActiveSection('ProdutoSection')">Cancelar</button>
+        <button type="submit" class="btn btn-success"><i class="bi bi-plus-lg"></i> Cadastrar Produto</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+
+
+
+    
+   
+      
+    
+    
+  </div>
+
+  <!-- SCRIPTS -->
+<!-- Adicione isso NO HEAD do HTML -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,getDocs,
+  setDoc,
+  updateDoc,
+  collection,
+  addDoc
+} from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+
+
+
+
+  // Configuração dohttp://www.bb.com.br/portalbb/page251,116,2018,1,1,1,1.bb?codigoMenu=164&codigoNoticia=1333 Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyDimXW0l-O_tmRhNH-WWgZqXGucX3Zk4hc",
+    authDomain: "panelinha-fe407.firebaseapp.com",
+    projectId: "panelinha-fe407",
+    storageBucket: "panelinha-fe407.appspot.com",
+    messagingSenderId: "1006485480860",
+    appId: "1:1006485480860:web:ded54166d6bfad4f649459",
+    measurementId: "G-BM581Q8TKX"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Navegação entre seções
+  function setActiveSection(sectionIdToShow, clickedNav) {
+    const sections = ['ordersSection', 'clientsSection', 'inventorySection', 'ProdutoSection','cardapioSection'];
+    const navButtons = ['nav-orders', 'nav-clients', 'nav-inventory', 'nav-produto' ,'nav-cardapio'];
+
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = (id === sectionIdToShow) ? '' : 'none';
+    });
+
+    navButtons.forEach(id => {
+      const nav = document.getElementById(id);
+      if (nav) nav.classList.remove('active');
+    });
+
+    if (clickedNav) clickedNav.classList.add('active');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('nav-orders')?.addEventListener('click', e => {
+      e.preventDefault();
+      setActiveSection('ordersSection', e.target);
+    });
+
+    document.getElementById('nav-clients')?.addEventListener('click', e => {
+      e.preventDefault();
+      setActiveSection('clientsSection', e.target);
+    });
+
+    document.getElementById('nav-cardapio')?.addEventListener('click', e => {
+      e.preventDefault();
+      setActiveSection('cardapioSection', e.target);
+    });
+
+    document.getElementById('nav-inventory')?.addEventListener('click', e => {
+      e.preventDefault();
+      setActiveSection('inventorySection', e.target);
+    });
+
+    document.getElementById('nav-produto')?.addEventListener('click', e => {
+      e.preventDefault();
+      setActiveSection('ProdutoSection', e.target);
+    });
+
+    montarEstruturaPedidos();
+    carregarPedidos();
+    renderInventory();
+  });
+
+  const initialProducts = [
+    { id: 1, name: 'Bolo de Pote de Limão', stock: 2, reserved: 0 },
+    { id: 2, name: 'Bolo de Pote de Brigadeiro', stock: 5, reserved: 0 },
+    { id: 3, name: 'Mini Pizza Calabresa', stock: 15, reserved: 0 },
+    { id: 4, name: 'Pizza Broto 4 Queijos', stock: 5, reserved: 0 }
+  ];
+  let products = JSON.parse(localStorage.getItem('products')) || initialProducts;
+
+  function saveProducts() {
+    localStorage.setItem('products', JSON.stringify(products));
+  }
+
+  function renderInventory() {
+    const tbody = document.getElementById('inventoryBody');
+    tbody.innerHTML = '';
+    products.forEach((prod, i) => {
+      const canAction = prod.stock > 0;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${prod.id}</td>
+        <td>${prod.name}</td>
+        <td id="stock-${i}">${prod.stock}</td>
+        <td id="reserved-${i}">${prod.reserved}</td>
+        <td>
+          <button class="btn-status buy" onclick="buyProduct(${i})" ${canAction ? '' : 'disabled'}>Comprar</button>
+          <button class="btn-status reserve" onclick="reserveProduct(${i})" ${canAction ? '' : 'disabled'}>Reservar</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  window.buyProduct = function(idx) {
+    const product = products[idx];
+    if (product.stock > 0) {
+      product.stock--;
+      if (product.reserved > 0) product.reserved--;
+      saveProducts();
+      renderInventory();
+    } else {
+      alert('Estoque esgotado.');
+    }
+  }
+
+  window.reserveProduct = function(idx) {
+    const product = products[idx];
+    if (product.stock > 0) {
+      product.stock--;
+      product.reserved++;
+      saveProducts();
+      renderInventory();
+    } else {
+      alert('Estoque insuficiente para reservar.');
+    }
+  }
+
+  function montarEstruturaPedidos() {
+    const ordersSection = document.getElementById('ordersSection');
+    ordersSection.innerHTML = `
+      <div class="container-fluid">
+        <div class="status-columns">
+          <div class="status-column">
+            <div class="recebido-header status-header">
+              <i class="bi bi-hourglass-top me-2"></i>Recebido
+            </div>
+            <div id="recebidos-container" class="pedidos-container"></div>
+          </div>
+          <div class="status-column">
+            <div class="producao-header status-header">
+              <i class="bi bi-gear-wide-connected me-2"></i>Em Produção
+            </div>
+            <div id="producao-container" class="pedidos-container"></div>
+          </div>
+          <div class="status-column">
+            <div class="finalizado-header status-header">
+              <i class="bi bi-check-circle me-2"></i>Finalizado
+            </div>
+            <div id="finalizado-container" class="pedidos-container"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function carregarPedidos() {
+  const pedidosSnapshot = await getDocs(collection(db, 'pedidos'));
+  const pedidos = pedidosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+  document.getElementById('recebidos-container').innerHTML = '';
+  document.getElementById('producao-container').innerHTML = '';
+  document.getElementById('finalizado-container').innerHTML = '';
+
+  pedidos.forEach(pedido => {
+    const status = typeof pedido.status === 'string' ? pedido.status.toLowerCase() : 'desconhecido';
+
+    const itensFormatados = (Array.isArray(pedido.itens)
+      ? pedido.itens
+      : (typeof pedido.itens === 'string' ? pedido.itens.split(',') : [])
+    ).map(item => {
+      if (typeof item === 'object' && item !== null) {
+        const nome = item.nome || item.produto || 'Item';
+        const qtd = item.quantidade || item.qtd || 1;
+        return `<li>• ${qtd}x ${nome}</li>`;
+      } else {
+        return `<li>• ${String(item).trim()}</li>`;
+      }
+    }).join('');
+
+    const cardHTML = `
+      <div class="pedido-card status-${status}">
+        <div class="pedido-info">
+          <div class="d-flex justify-content-between align-items-start">
+            <h5 class="mb-2">${pedido.id}</h5>
+            <small class="text-muted"><strong>Data:</strong> ${pedido.data || ''}</small>  
+            <small class="text-muted">${pedido.horario || ''}</small>
+          </div>
+          <p class="mb-1"><strong>Cliente:</strong> ${pedido.cliente}</p>
+          <p class="mb-2"><strong>Valor:</strong> ${pedido.valor}</p>        
+          <div class="detalhes-pedido ${status !== 'finalizado' ? 'show' : ''}">
+            <div class="border-top pt-2 mt-2">
+              <p class="mb-1"><strong>Itens:</strong></p>
+              <ul class="list-unstyled ps-3">
+                ${itensFormatados}
+              </ul>
+              <p class="mb-1"><strong>Pagamento:</strong> ${pedido.pagamento || 'Não informado'}</p>
+              ${pedido.observacoes ? `<p class="mb-1"><strong>Observações:</strong> ${pedido.observacoes}</p>` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="pedido-actions mt-2">
+          ${status === 'recebido' ? 
+            `<button class="btn btn-sm btn-primary w-100 mb-2" onclick="mudarStatus('${pedido.id}', 'producao')">
+              <i class="bi bi-play-fill me-1"></i> Produzir
+            </button>` : ''}
+          ${status === 'producao' ? 
+            `<button class="btn btn-sm btn-success w-100 mb-2" onclick="mudarStatus('${pedido.id}', 'finalizado')">
+              <i class="bi bi-check-lg me-1"></i> Finalizar
+            </button>` : ''}
+          <button class="btn btn-sm btn-outline-secondary btn-detalhes w-100" onclick="toggleDetalhes(this)">
+            <i class="bi bi-list-ul me-1"></i> Detalhes
+          </button>
+        </div>
+      </div>
+    `;
+
+    const containerId = {
+      'recebido': 'recebidos-container',
+      'producao': 'producao-container',
+      'finalizado': 'finalizado-container'
+    }[status];
+
+    if (containerId) {
+      document.getElementById(containerId)?.insertAdjacentHTML('beforeend', cardHTML);
+    } else {
+      console.warn(`Pedido ${pedido.id} com status desconhecido:`, pedido.status);
+    }
+  });
+
+  console.log('Pedidos renderizados:', pedidos.map(p => p.id));
+}
+
+
+window.mudarStatus = async function(pedidoId, novoStatus) {
+  const cleanId = pedidoId.replace(/^#/, ''); // ainda útil caso venha com #
+  const pedidoRef = doc(db, 'pedidos', cleanId);
+
+  let mensagemConfirmacao = 'Tem certeza que deseja alterar o status do pedido?';
+  if (novoStatus === 'producao') {
+    mensagemConfirmacao = 'Tem certeza que deseja iniciar a produção?';
+  } else if (novoStatus === 'finalizado') {
+    mensagemConfirmacao = 'Tem certeza que deseja finalizar o pedido?';
+  }
+
+  if (confirm(mensagemConfirmacao)) {
+    await updateDoc(pedidoRef, { status: novoStatus });
+    await carregarPedidos();
+
+    if (novoStatus === 'finalizado') {
+      alert('Pedido finalizado com sucesso!');
+    } else if (novoStatus === 'producao') {
+      alert('Produção iniciada com sucesso!');
+    }
+  }
+}
+
+
+  window.toggleDetalhes = function(botao) {
+    const card = botao.closest('.pedido-card');
+    if (!card) return;
+
+    const detalhes = card.querySelector('.detalhes-pedido');
+    if (!detalhes) return;
+
+    if (detalhes.classList.contains('show')) {
+      detalhes.classList.remove('show');
+      botao.innerHTML = '<i class="bi bi-chevron-down me-1"></i> Ver Mais';
+    } else {
+      detalhes.classList.add('show');
+      botao.innerHTML = '<i class="bi bi-chevron-up me-1"></i> Ver Menos';
+    }
+  }
+
+  window.onload = () => {
+    setActiveSection('ordersSection', document.getElementById('nav-orders'));
+    renderInventory();
+  }
+
+
+
+document.getElementById('formProduto').addEventListener('submit', cadastrarProduto);
+
+async function cadastrarProduto(event) {
+  event.preventDefault();
+
+  const nome = document.getElementById('nomeProduto').value.trim();
+  const preco = parseFloat(document.getElementById('precoProduto').value);
+  const categoria = document.getElementById('categoriaProduto').value;
+  const imagem = document.getElementById('imagemProduto').files[0];
+
+  if (!imagem) {
+    alert("Selecione uma imagem.");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async function () {
+    const imagemBase64 = reader.result;
+
+    try {
+      const docRef = await addDoc(
+        collection(db, 'cadastros', 'produtos', 'produto'),
+        {
+          nome,
+          preco,
+          categoria,
+          imagemBase64,
+          criadoEm: new Date().toISOString(),
+          disponivel: true, // 🔹 Aqui está o campo que faltava
+        }
+      );
+
+      await updateDoc(docRef, {
+        "produto id": docRef.id
+      });
+
+      alert("Produto cadastrado com sucesso!");
+      document.getElementById("formProduto").reset();
+    } catch (erro) {
+      console.error("Erro ao cadastrar produto:", erro);
+      alert("Erro ao cadastrar o produto. Tente novamente.");
+    }
+  };
+
+  reader.readAsDataURL(imagem);
+}
+
+
+
+async function carregarCardapio() {
+  const container = document.querySelector("#listaCardapio");
+  container.innerHTML = "";
+
+  try {
+    const snapshot = await getDocs(collection(db, 'cadastros', 'produtos', 'produto'));
+    if (snapshot.empty) {
+      container.innerHTML = "<p>Nenhum produto cadastrado.</p>";
+      return;
+    }
+
+    snapshot.forEach(docSnap => {
+      const produto = docSnap.data();
+      const id = docSnap.id;
+
+      /* 1️⃣  Considera “verdadeiro” por padrão se o campo não existir  */
+      const disponivel = produto.disponivel !== false;  
+
+      const card = document.createElement("div");
+      card.className = "card-produto";
+      card.innerHTML = `
+        <img src="${produto.imagemBase64 || 'https://via.placeholder.com/150?text=Sem+imagem'}" alt="${produto.nome}">
+        <strong>${produto.nome}</strong>
+        <div class="preco">R$ ${Number(produto.preco).toFixed(2)}</div>
+
+        <!-- 2️⃣  Usa a variável ‘disponivel’ para cor/classe/label -->
+        <button
+          class="btn-toggle ${disponivel ? 'disponivel' : 'indisponivel'}"
+          onclick="alterarDisponibilidade('${id}', ${!disponivel})">
+          ${disponivel ? '✅ Disponível' : '❌ Indisponível'}
+        </button>
+        <hr>
+      `;
+      container.appendChild(card);
+    });
+  } catch (erro) {
+    console.error("Erro ao carregar cardápio:", erro);
+    container.innerHTML = "<p>Erro ao carregar cardápio.</p>";
+  }
+}
+
+/* 3️⃣  Continua igual: faz update e recarrega a lista */
+window.alterarDisponibilidade = async function (produtoId, novoStatus) {
+  console.log('⏩ alterando', produtoId, 'para', novoStatus);   // <-- veja no console
+
+  const ref = doc(db, 'cadastros', 'produtos', 'produto', produtoId);
+  console.log('📄 path:', ref.path);                           // caminho final
+
+  try {
+    await updateDoc(ref, { disponivel: novoStatus });
+    console.log('✅ update ok');
+    carregarCardapio();
+  } catch (erro) {
+    console.error('❌ updateDoc falhou:', erro);
+    alert('Erro ao atualizar produto.');
+  }
+};
+
+
+
+
+
+console.log("⚡ Função carregarCardapio foi chamada!");
+carregarCardapio();
+
+
+
+async function corrigirProdutosAntigos() {
+  const snap = await getDocs(collection(db, 'cadastros', 'produtos', 'produto'));
+  for (const docSnap of snap.docs) {
+    const dados = docSnap.data();
+    if (typeof dados.disponivel === 'undefined') {
+      await updateDoc(docSnap.ref, { disponivel: true });
+      console.log("Corrigido:", docSnap.id);
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+window.toggleSidebar = function () {
+  const sidebar = document.getElementById('sidebar');
+  const mainContent = document.querySelector('.main-content');
+  
+  sidebar.classList.toggle('collapsed');
+  if (mainContent) mainContent.classList.toggle('collapsed');
+};
+
+
+
+
+
+
+</script>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

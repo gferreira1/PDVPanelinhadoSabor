@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Digital Menu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Open+Sans&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background: #dcdcdc;
+      font-family: 'Open Sans', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .menu-container {
+      width: 1000px;
+      height: 700px;
+      background: url('menu-imagem.png') center/cover no-repeat;
+      position: relative;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+      border-radius: 20px;
+    }
+
+    .overlay {
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 20px;
+      width: 100%;
+      height: 100%;
+      padding: 40px;
+      box-sizing: border-box;
+      color: #fff;
+    }
+
+    .title {
+      text-align: center;
+      color: #ffd700;
+      font-size: 36px;
+      font-family: 'Playfair Display', serif;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #ccc;
+      margin-bottom: 40px;
+    }
+
+    .columns {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .column {
+      width: 22%;
+    }
+
+    .column h3 {
+      color: #ffd700;
+      border-bottom: 1px solid #444;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+      font-family: 'Playfair Display', serif;
+    }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      border-bottom: 1px dashed #555;
+      padding: 5px 0;
+    }
+
+    .item .price {
+      color: #ffd700;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      .menu-container {
+        width: 90%;
+        height: auto;
+      }
+
+      .columns {
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .column {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="menu-container">
+  <div class="overlay">
+    <div class="title">Old Fashioned MENU</div>
+    <div class="subtitle">Healthy and Tasty</div>
+
+    <div class="columns">
+      <div class="column">
+        <h3>Breakfast</h3>
+        <div class="item"><span>Egg omelette with cheese</span><span class="price">$6.99</span></div>
+        <div class="item"><span>Mashed potatoes with salad</span><span class="price">$3.99</span></div>
+        <div class="item"><span>Egg sandwich with avocado</span><span class="price">$4.99</span></div>
+        <div class="item"><span>Egg sandwich with pork ham</span><span class="price">$5.99</span></div>
+      </div>
+
+      <div class="column">
+        <h3>Main Dish</h3>
+        <div class="item"><span>Classic Hamburger</span><span class="price">$6.99</span></div>
+        <div class="item"><span>Cheese Burger with Onions</span><span class="price">$7.99</span></div>
+        <div class="item"><span>Steak with Fries</span><span class="price">$8.99</span></div>
+        <div class="item"><span>Fish and Chips</span><span class="price">$7.99</span></div>
+      </div>
+
+      <div class="column">
+        <h3>Beverages</h3>
+        <div class="item"><span>Black Coffee</span><span class="price">$2.99</span></div>
+        <div class="item"><span>Fruit Berry Juice</span><span class="price">$3.99</span></div>
+        <div class="item"><span>Ginger Ale</span><span class="price">$3.49</span></div>
+        <div class="item"><span>Sparkling Water</span><span class="price">$2.49</span></div>
+      </div>
+
+      <div class="column">
+        <h3>Dessert</h3>
+        <div class="item"><span>Chocolate Cake</span><span class="price">$4.99</span></div>
+        <div class="item"><span>Apple Pie</span><span class="price">$3.99</span></div>
+        <div class="item"><span>Rice Bowl</span><span class="price">$2.49</span></div>
+        <div class="item"><span>Roasted Peanuts</span><span class="price">$1.99</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

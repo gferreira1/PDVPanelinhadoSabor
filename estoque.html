@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle de Estoque</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th, td { padding: 8px 12px; border: 1px solid #ccc; text-align: center; }
+    th { background: #42cdac; color: white; }
+    button { padding: 6px 10px; margin: 2px; border: none; border-radius: 4px; cursor: pointer; }
+    .buy { background: #28a745; color: white; }
+    .reserve { background: #ffc107; color: white; }
+    .disabled { background: #ccc; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <h1>Controle de Estoque</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Produto</th>
+        <th>Estoque</th>
+        <th>Reservado</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="inventoryBody">
+      <!-- Linhas de produtos serão geradas aqui -->
+    </tbody>
+  </table>
+
+  <script>
+    // Lista inicial de produtos com estoque e reservado
+    const initialProducts = [
+      { id: 1, name: 'Bolo de Pote de Limão', stock: 10, reserved: 0 },
+      { id: 2, name: 'Bolo de Pote de Brigadeiro', stock: 8, reserved: 0 },
+      { id: 3, name: 'Mini Pizza Calabresa', stock: 15, reserved: 0 },
+      { id: 4, name: 'Pizza Broto 4 Queijos', stock: 5, reserved: 0 }
+    ];
+
+    // Carrega ou inicializa no localStorage
+    let products = JSON.parse(localStorage.getItem('products')) || initialProducts;
+
+    function saveProducts() {
+      localStorage.setItem('products', JSON.stringify(products));
+    }
+
+    function renderInventory() {
+      const tbody = document.getElementById('inventoryBody');
+      tbody.innerHTML = '';
+      products.forEach((prod, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${prod.id}</td>
+          <td>${prod.name}</td>
+          <td id="stock-${index}">${prod.stock}</td>
+          <td id="reserved-${index}">${prod.reserved}</td>
+          <td>
+            <button class="buy" onclick="buyProduct(${index})" ${prod.stock === 0 ? 'disabled class=\"disabled\"' : ''}>Comprar</button>
+            <button class="reserve" onclick="reserveProduct(${index})" ${prod.stock === 0 ? 'disabled class=\"disabled\"' : ''}>Reservar</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function buyProduct(idx) {
+      if (products[idx].stock > 0) {
+        products[idx].stock -= 1;
+        saveProducts();
+        renderInventory();
+      }
+    }
+
+    function reserveProduct(idx) {
+      if (products[idx].stock > 0) {
+        products[idx].reserved += 1;
+        // opcional: não decrementar estoque imediatamente
+        saveProducts();
+        renderInventory();
+      }
+    }
+
+    // Inicialização
+    renderInventory();
+  </script>
+</body>
+</html>

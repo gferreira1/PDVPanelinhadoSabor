@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cardápio</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+    }
+
+    header {
+      background-color: #1f1f2e;
+      color: white;
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header img {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+    }
+
+    header input {
+      flex: 1;
+      padding: 10px 20px;
+      border-radius: 20px;
+      border: none;
+      font-size: 14px;
+    }
+
+    .categories {
+      display: flex;
+      overflow-x: auto;
+      background-color: #eaeaea;
+      padding: 10px;
+    }
+
+    .category {
+      flex: 0 0 auto;
+      margin: 0 10px;
+      text-align: center;
+      color: #1f1f2e;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .category span {
+      display: block;
+      background-color: #ddd;
+      border-radius: 50%;
+      padding: 15px;
+      margin-bottom: 5px;
+      font-size: 20px;
+    }
+
+    .category.active span {
+      background-color: #ffcc00;
+    }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .product {
+      background-color: white;
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .product img {
+      width: 100%;
+      border-radius: 10px;
+    }
+
+    .product h3 {
+      margin: 10px 0 5px;
+      font-size: 16px;
+    }
+
+    .product p {
+      color: #ff9900;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .btn-salvar {
+      background-color: #ffcc00;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    footer {
+      background-color: #ffcc00;
+      padding: 10px 0;
+      display: flex;
+      justify-content: space-around;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+    }
+
+    footer span {
+      font-size: 22px;
+      position: relative;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -5px;
+      right: -10px;
+      background: red;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 12px;
+    }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDimXW0l-O_tmRhNH-WWgZqXGucX3Zk4hc",
+      authDomain: "panelinha-fe407.firebaseapp.com",
+      projectId: "panelinha-fe407",
+      storageBucket: "panelinha-fe407.appspot.com",
+      messagingSenderId: "1006485480860",
+      appId: "1:1006485480860:web:ded54166d6bfad4f649459",
+      measurementId: "G-BM581Q8TKX"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const botoesSalvar = document.querySelectorAll('.btn-salvar');
+
+      botoesSalvar.forEach(botao => {
+        botao.addEventListener('click', async () => {
+          const productDiv = botao.closest('.product');
+          const nome = productDiv.querySelector('.nome-produto')?.innerText;
+          const precoTexto = productDiv.querySelector('.preco-produto')?.innerText || "R$ 0,00";
+          const preco = parseFloat(precoTexto.replace("R$", "").replace(",", ".").trim());
+          const imagem = productDiv.querySelector('img')?.getAttribute('src');
+
+          const produto = { nome, preco, imagem };
+
+          try {
+            await addDoc(collection(db, "banco", "uid", "produtos"), produto);
+            alert(`Produto "${nome}" salvo no Firebase!`);
+          } catch (error) {
+            alert("Erro ao salvar no Firebase");
+            console.error(error);
+          }
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <img src="./imagens/panelalogo.png" alt="Logo">
+    <input type="text" placeholder="Pesquisar...">
+  </header>
+
+  <div class="categories">
+    <div class="category active"><span>🍽</span>Todos</div>
+    <div class="category"><span>🍰</span>Bolos</div>
+    <div class="category"><span>🍕</span>Pizzas</div>
+    <div class="category"><span>🍝</span>Lasanhas</div>
+    <div class="category"><span>🥞</span>Panquecas</div>
+  </div>
+
+  <div class="products">
+    <div class="product">
+      <img src="./imagens/bololimao.webp" alt="Bolo de Limão">
+      <h3 class="nome-produto">Bolo de Pote Limão</h3>
+      <p class="preco-produto">R$ 10,00</p>
+      <button class="btn-salvar">Salvar no Firebase</button>
+    </div>
+
+    <div class="product">
+      <img src="./imagens/bolobrigadeiro.webp" alt="Bolo Brigadeiro">
+      <h3 class="nome-produto">Bolo de Pote Brigadeiro</h3>
+      <p class="preco-produto">R$ 10,00</p>
+      <button class="btn-salvar">Salvar no Firebase</button>
+    </div>
+
+    <div class="product">
+      <img src="./imagens/bolomaracuja.webp" alt="Bolo Maracujá">
+      <h3 class="nome-produto">Bolo de Pote Maracujá</h3>
+      <p class="preco-produto">R$ 10,00</p>
+      <button class="btn-salvar">Salvar no Firebase</button>
+    </div>
+
+    <div class="product">
+      <img src="./imagens/pizzacalabresa.webp" alt="Mini Pizza">
+      <h3 class="nome-produto">Mini Pizza Calabresa</h3>
+      <p class="preco-produto">R$ 5,00</p>
+      <button class="btn-salvar">Salvar no Firebase</button>
+    </div>
+  </div>
+
+  <footer>
+    <span>🏠</span>
+    <span>⚙️</span>
+    <span>➡️</span>
+    <span>
+      🛒
+      <span class="cart-badge">1</span>
+    </span>
+  </footer>
+</body>
+</html>
