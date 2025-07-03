@@ -373,28 +373,6 @@ th {
   gap: 10px;
 }
 
-.btn-excluir {
-  background-color: #e2360b;
-  color: #fff;
-  border: none;
-  padding: 8px;
-  border-radius: 50%; /* 🔁 botão redondo */
-  cursor: pointer;
-  font-weight: bold;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.btn-excluir:hover {
-  background-color: #c62f09;
-  transform: scale(1.05);
-}
-
-
 .btn {
   background-color: #4CAF50;
   color: #fff;
@@ -641,14 +619,13 @@ th {
 .btn-toggle:hover {
   opacity: 0.85;
 }
-button.btn-Config {
-    background-color: white;
-    border: midnightblue;
-}
 
-.dropdown {
-    margin-top: -3px;
-}
+
+
+
+
+
+
   </style>
 </head>
 <body>
@@ -706,27 +683,62 @@ button.btn-Config {
     </section>
 
     <!-- Seção de Clientes -->
-  <section id="clientsSection" style="display: none;">
-  <div class="container-fluid">
-    <h2 class="mb-4">Histórico de Clientes</h2>
+    <section id="clientsSection" style="display:none;">
+      <div class="container-fluid">
+        <h2 class="mb-4">Histórico de Clientes</h2>
+    
+        <div class="cards-container">
+    
+          <div class="pedido-card">
+            <div class="pedido-info">
+              <h5>Cliente: Ana Souza</h5>
+              <p><strong>Telefone:</strong> (11) 91234-5678</p>
+              <p><strong>Endereço:</strong> Rua das Flores, 123</p>
+              <p><strong>Último Pedido:</strong> Chocolate com Morango</p>
+              <p><strong>Data:</strong> 25/04/2025</p>
+              <p><strong>Quantidade:</strong> 2</p>
+              <p><strong>Total Gasto:</strong> R$ 20,00</p>
+              <button class="btn btn-sm btn-outline-secondary btn-detalhes w-100" onclick="toggleDetalhes(this)">
+  <i class="bi bi-list-ul me-1"></i> Detalhes
+</button>
 
-    <!-- Campo de pesquisa -->
-    <div class="mb-3">
-      <input
-        type="text"
-        id="searchInput"
-        class="form-control"
-        placeholder="Buscar por nome ou telefone..."
-      />
-    </div>
+    
+              <div class="detalhes-pedido">
+                <p><strong>Pedidos Anteriores:</strong></p>
+                <ul>
+                  <li>20/04/2025 – Doce de Leite </li>
+                  <li>15/04/2025 – Ninho com Nutella </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+    
+          <div class="pedido-card">
+            <div class="pedido-info">
+              <h5>Cliente: Bruno Lima</h5>
+              <p><strong>Telefone:</strong> (11) 99876-5432</p>
+              <p><strong>Endereço:</strong> Av. Paulista, 456</p>
+              <p><strong>Último Pedido:</strong> Red Velvet</p>
+              <p><strong>Data:</strong> 24/04/2025</p>
+              <p><strong>Quantidade:</strong> 1</p>
+              <p><strong>Total Gasto:</strong> R$ 10,00</p>
+              <button class="btn btn-sm btn-outline-secondary btn-detalhes w-100" onclick="toggleDetalhes(this)">
+  <i class="bi bi-list-ul me-1"></i> Detalhes
+</button>
 
-    <!-- Container dos cards -->
-    <div class="cards-container" id="cardsContainer">
-      <!-- Os cartões de pedidos serão adicionados dinamicamente aqui -->
-    </div>
-  </div>
-</section>
-
+    
+              <div class="detalhes-pedido ${pedido.status.toLowerCase() !== 'finalizado' ? 'show' : ''}">
+                <p><strong>Pedidos Anteriores:</strong></p>
+                <ul>
+                  <li>10/04/2025 – Brigadeiro </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+    
+        </div>
+      </div>
+    </section>
 
     <!-- Seção de Imprimir QR Code -->
 <section id="qrcodeSection" style="display:none;">
@@ -762,24 +774,6 @@ button.btn-Config {
 <section id="inventorySection" style="display: none;">
   <div class="container-fluid">
     <h2 class="mb-4">Controle de Estoque</h2>
-    <!-- Formulário de Cadastro -->
-<form id="formCadastroProduto" class="mb-4">
-  <div class="row g-2">
-    <div class="col-sm-3">
-      <input type="text" class="form-control" id="inputId" placeholder="ID do Produto" required>
-    </div>
-    <div class="col-sm-4">
-      <input type="text" class="form-control" id="inputNome" placeholder="Nome do Produto" required>
-    </div>
-    <div class="col-sm-3">
-      <input type="number" class="form-control" id="inputQuantidade" placeholder="Quantidade Inicial" required min="1">
-    </div>
-    <div class="col-sm-2">
-      <button type="submit" class="btn btn-primary w-100">Cadastrar</button>
-    </div>
-  </div>
-</form>
-
     <table>
       <thead>
         <tr>
@@ -819,47 +813,21 @@ button.btn-Config {
 
       <!-- Categoria -->
       <div class="mb-3">
-  <label for="categoriaProduto" class="form-label">Categoria</label>
-  <div class="d-flex gap-2">
-    <select id="categoriaProduto" class="form-select" required></select>
-    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalCategoria">
-      +
-    </button>
-  </div>
-</div>
+        <label for="categoriaProduto" class="form-label">Categoria</label>
+        <select class="form-select" id="categoriaProduto" required>
+          <option value="">Selecione...</option>
+          <option value="Bolo de Pote">Bolo de Pote</option>
+          <option value="Torta">Torta</option>
+          <option value="Bebida">Bebida</option>
+        </select>
+      </div>
 
       <!-- Botões -->
       <div class="d-flex justify-content-between">
-       <!--<button type="button" class="btn btn-outline-secondary" onclick="setActiveSection('ProdutoSection')">Cancelar</button>--> 
-       <button id="btnCadastrar" type="submit" class="btn btn-success">
-  <i class="bi bi-plus-lg"></i> Cadastrar Produto
-</button>
-
-      </div>
-
-      
-    </form>
-
-      <!-- Modal para Cadastrar Categoria -->
-<div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalCategoriaLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form id="formCategoria" class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalCategoriaLabel">Nova Categoria</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <label for="nomeCategoria" class="form-label">Nome da Categoria</label>
-        <input type="text" id="nomeCategoria" class="form-control" required />
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Salvar</button>
+        <button type="button" class="btn btn-outline-secondary" onclick="setActiveSection('ProdutoSection')">Cancelar</button>
+        <button type="submit" class="btn btn-success"><i class="bi bi-plus-lg"></i> Cadastrar Produto</button>
       </div>
     </form>
-  </div>
-</div>
-
-
   </div>
 </section>
 
@@ -884,8 +852,7 @@ import {
   setDoc,
   updateDoc,
   collection,
-  addDoc,
-  deleteDoc 
+  addDoc
 } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 
 
@@ -1010,7 +977,7 @@ import {
     }
   }
 
- function montarEstruturaPedidos() {
+  function montarEstruturaPedidos() {
     const ordersSection = document.getElementById('ordersSection');
     ordersSection.innerHTML = `
       <div class="container-fluid">
@@ -1069,28 +1036,8 @@ import {
             <h5 class="mb-2">${pedido.id}</h5>
             <small class="text-muted"><strong>Data:</strong> ${pedido.data || ''}</small>  
             <small class="text-muted">${pedido.horario || ''}</small>
-            <!-- Botão de ações (⋮) -->
-        <div class="dropdown ">
-          <button class="btn-Config" data-bs-toggle="dropdown" title="Mais ações">
-            <i class="bi bi-three-dots-vertical"></i>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <!-- Data do pedido 
-            <li>
-              <a class="dropdown-item" href="#" onclick="editarPedido('${pedido.id}')">
-                <i class="bi bi-pencil me-1"></i> Editar
-              </a>
-            </li>   fecha aqui -->
-            <li>
-              <a class="dropdown-item text-danger" href="#" onclick="excluirPedido('${pedido.id}')">
-                <i class="bi bi-trash me-1"></i> Excluir
-              </a>
-            </li>
-          </ul>
-        </div>
           </div>
           <p class="mb-1"><strong>Cliente:</strong> ${pedido.cliente}</p>
-           <p class="mb-2"><i class="bi bi-telephone-fill me-1"></i> ${pedido.telefone || "Telefone não informado"}</p> 
           <p class="mb-2"><strong>Valor:</strong> ${pedido.valor}</p>        
           <div class="detalhes-pedido ${status !== 'finalizado' ? 'show' : ''}">
             <div class="border-top pt-2 mt-2">
@@ -1134,7 +1081,6 @@ import {
 
   console.log('Pedidos renderizados:', pedidos.map(p => p.id));
 }
-
 
 
 window.mudarStatus = async function(pedidoId, novoStatus) {
@@ -1183,154 +1129,53 @@ window.mudarStatus = async function(pedidoId, novoStatus) {
   }
 
 
-// 🔹 Listener para o formulário de produto
+
 document.getElementById('formProduto').addEventListener('submit', cadastrarProduto);
 
-// 🔹 Carrega categorias no <select>
-async function carregarCategorias() {
-  const select = document.getElementById('categoriaProduto');
-  select.innerHTML = '<option value="">Selecione uma categoria</option>';
-
-  try {
-    const snapshot = await getDocs(collection(db, 'cadastros', 'categorias', 'categoria'));
-    snapshot.forEach(docSnap => {
-      const nome = docSnap.data()["categoria nome"];
-      if (nome) {
-        const option = document.createElement('option');
-        option.value = nome;
-        option.textContent = nome;
-        select.appendChild(option);
-      }
-    });
-  } catch (erro) {
-    console.error("Erro ao carregar categorias:", erro);
-    select.innerHTML = '<option value="">Erro ao carregar</option>';
-  }
-}
-
-// 🔹 Cadastra nova categoria via modal
-document.getElementById('formCategoria').addEventListener('submit', async function (event) {
-  event.preventDefault();
-  const nomeCategoria = document.getElementById('nomeCategoria').value.trim();
-
-  if (!nomeCategoria) {
-    alert("Digite o nome da categoria.");
-    return;
-  }
-
-  try {
-    const snapshot = await getDocs(collection(db, 'cadastros', 'categorias', 'categoria'));
-    const existe = snapshot.docs.some(doc =>
-      doc.data()["categoria nome"]?.toLowerCase() === nomeCategoria.toLowerCase()
-    );
-
-    if (existe) {
-      alert("Essa categoria já existe.");
-    } else {
-      const docRef = await addDoc(collection(db, 'cadastros', 'categorias', 'categoria'), {
-        "categoria nome": nomeCategoria
-      });
-      await updateDoc(docRef, { "categoria id": docRef.id });
-      console.log(`✅ Categoria '${nomeCategoria}' cadastrada.`);
-
-      await carregarCategorias(); // Atualiza <select>
-
-      // 🔹 Seleciona a nova categoria no select
-      setTimeout(() => {
-        const select = document.getElementById('categoriaProduto');
-        for (const option of select.options) {
-          if (option.value.toLowerCase() === nomeCategoria.toLowerCase()) {
-            select.value = option.value;
-            break;
-          }
-        }
-      }, 300); // pequeno delay para garantir que as opções já foram renderizadas
-
-      // Fecha o modal
-      const modal = bootstrap.Modal.getInstance(document.getElementById('modalCategoria'));
-      modal.hide();
-
-      // Limpa o campo do modal
-      document.getElementById('formCategoria').reset();
-    }
-  } catch (erro) {
-    console.error("Erro ao cadastrar categoria:", erro);
-    alert("Erro ao cadastrar categoria.");
-  }
-});
-
-
-// 🔹 Cadastra produto com imagem e categoria
 async function cadastrarProduto(event) {
   event.preventDefault();
 
   const nome = document.getElementById('nomeProduto').value.trim();
   const preco = parseFloat(document.getElementById('precoProduto').value);
-  const categoria = document.getElementById('categoriaProduto').value.trim();
+  const categoria = document.getElementById('categoriaProduto').value;
   const imagem = document.getElementById('imagemProduto').files[0];
 
-  if (!nome || isNaN(preco) || !categoria || !imagem) {
-    alert("Preencha todos os campos corretamente.");
+  if (!imagem) {
+    alert("Selecione uma imagem.");
     return;
   }
 
-  const btn = document.getElementById("btnCadastrar");
-  btn.disabled = true;
-  btn.textContent = "Cadastrando...";
+  const reader = new FileReader();
+  reader.onload = async function () {
+    const imagemBase64 = reader.result;
 
-  try {
-    // 1️⃣ Converte imagem para base64 usando Promise
-    const imagemBase64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject("Erro ao ler imagem.");
-      reader.readAsDataURL(imagem);
-    });
-
-    // 2️⃣ Salva o produto
-    const docRef = await addDoc(
-      collection(db, 'cadastros', 'produtos', 'produto'),
-      {
-        nome,
-        preco,
-        categoria,
-        imagemBase64,
-        criadoEm: new Date().toISOString(),
-        disponivel: true
-      }
-    );
-
-    await updateDoc(docRef, { "produto id": docRef.id });
-
-    // 3️⃣ Verifica e cria categoria se necessário
-    const snap = await getDocs(collection(db, 'cadastros', 'categorias', 'categoria'));
-    const categoriaExiste = snap.docs.some(doc =>
-      doc.data()["categoria nome"]?.toLowerCase() === categoria.toLowerCase()
-    );
-
-    if (!categoriaExiste) {
-      const novaRef = await addDoc(
-        collection(db, 'cadastros', 'categorias', 'categoria'),
-        { "categoria nome": categoria }
+    try {
+      const docRef = await addDoc(
+        collection(db, 'cadastros', 'produtos', 'produto'),
+        {
+          nome,
+          preco,
+          categoria,
+          imagemBase64,
+          criadoEm: new Date().toISOString(),
+          disponivel: true, // 🔹 Aqui está o campo que faltava
+        }
       );
-      await updateDoc(novaRef, { "categoria id": novaRef.id });
-      console.log(`✅ Categoria '${categoria}' cadastrada automaticamente.`);
-      await carregarCategorias();
+
+      await updateDoc(docRef, {
+        "produto id": docRef.id
+      });
+
+      alert("Produto cadastrado com sucesso!");
+      document.getElementById("formProduto").reset();
+    } catch (erro) {
+      console.error("Erro ao cadastrar produto:", erro);
+      alert("Erro ao cadastrar o produto. Tente novamente.");
     }
+  };
 
-    alert("✅ Produto cadastrado com sucesso!");
-    document.getElementById("formProduto").reset();
-  } catch (erro) {
-    console.error("Erro ao cadastrar produto:", erro);
-    alert("Erro ao cadastrar o produto.");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Cadastrar Produto";
-  }
+  reader.readAsDataURL(imagem);
 }
-
-window.addEventListener('DOMContentLoaded', carregarCategorias);
-
 
 
 
@@ -1412,214 +1257,6 @@ async function corrigirProdutosAntigos() {
   }
 }
 
-async function carregarHistoricoClientes() {
-  const container = document.querySelector("#clientsSection .cards-container");
-  container.innerHTML = "";
-
-  try {
-    const snapshot = await getDocs(collection(db, "pedidos"));
-
-    if (snapshot.empty) {
-      container.innerHTML = "<p>Nenhum pedido encontrado.</p>";
-      return;
-    }
-
-    const historico = {};
-
-    snapshot.forEach(doc => {
-      const pedido = doc.data();
-      const cliente = pedido.cliente || "Cliente sem nome";
-
-      if (!historico[cliente]) historico[cliente] = [];
-      historico[cliente].push(pedido);
-    });
-
-    for (const cliente in historico) {
-      const pedidos = historico[cliente];
-
-      pedidos.sort((a, b) => {
-        const dtA = new Date(a.data.split("/").reverse().join("-") + "T" + (a.horario || "00:00"));
-        const dtB = new Date(b.data.split("/").reverse().join("-") + "T" + (b.horario || "00:00"));
-        return dtB - dtA;
-      });
-
-      const ultimoPedido = pedidos[0];
-      const anteriores = pedidos.slice(1);
-
-      let itensUltimo = [];
-
-        if (Array.isArray(ultimoPedido.itens)) {
-          itensUltimo = ultimoPedido.itens;
-        } else if (typeof ultimoPedido.itens === "string") {
-          // Exemplo: "3x Bolo de Pote de Brigadeiro"
-          const partes = ultimoPedido.itens.match(/^(\d+)x\s(.+)/);
-          if (partes) {
-            const qtd = parseInt(partes[1]);
-            const nome = partes[2];
-            itensUltimo = [{ nome, quantidade: qtd }];
-          } else {
-            itensUltimo = [{ nome: ultimoPedido.itens, quantidade: 1 }];
-          }
-        }
-
-     // tenta extrair a quantidade do texto tipo "3x ..."
-            let quantidadeTotal = 1;
-
-            if (Array.isArray(itensUltimo)) {
-              quantidadeTotal = itensUltimo.reduce((acc, item) => acc + (item.quantidade || 0), 0);
-            } else if (typeof itensUltimo === "object" && itensUltimo.quantidade) {
-              quantidadeTotal = itensUltimo.quantidade;
-            }
-
-            // usa o valor do campo direto
-            const valorStr = ultimoPedido.valor || "R$ 0,00";
-            const totalGasto = parseFloat(valorStr.replace("R$", "").replace(",", ".").trim()).toFixed(2);
-
-      const card = document.createElement("div");
-      card.classList.add("pedido-card");
-      card.innerHTML = `
-        <div class="pedido-info">
-          <h5 class="mb-2"><i class="bi bi-person-circle me-1"></i> ${cliente}</h5>
-          <p class="mb-2"><i class="bi bi-telephone-fill me-1"></i> ${ultimoPedido.telefone || "Telefone não informado"}</p>
-          <p><i class="bi bi-clock me-1"></i><strong>Data:</strong> ${ultimoPedido.data} ${ultimoPedido.horario || ""}</p>
-          <p><i class="bi bi-box me-1"></i><strong>Último Pedido:</strong> ${itensUltimo.map(i => i.nome).join(", ")}</p>
-          <p><i class="bi bi-stack me-1"></i><strong>Quantidade:</strong> ${quantidadeTotal}</p>
-          <p><i class="bi bi-cash me-1"></i><strong>Total Gasto:</strong> R$ ${totalGasto}</p>
-          ${anteriores.length > 0 ? `
-            <button class="btn btn-sm btn-outline-secondary btn-detalhes w-100 mt-2" onclick="toggleDetalhes(this)">
-              <i class="bi bi-list-ul me-1"></i> Ver Pedidos Anteriores
-            </button>
-            <div class="detalhes-pedido mt-2" style="display:none;">
-              <ul>
-                ${anteriores.map(p => {
-                  const itens = Array.isArray(p.itens) ? p.itens : [];
-                  return `<li>${p.data} – ${itens.map(i => i.nome).join(", ")}</li>`;
-                }).join("")}
-              </ul>
-            </div>
-          ` : ''}
-        </div>
-      `;
-      container.appendChild(card);
-    }
-
-  } catch (error) {
-    console.error("Erro ao carregar histórico de clientes:", error);
-    container.innerHTML = "<p>Erro ao carregar histórico.</p>";
-  }
-}
-
-function toggleDetalhes(button) {
-  const detalhes = button.nextElementSibling;
-  detalhes.style.display = (detalhes.style.display === "none" || detalhes.style.display === "") ? "block" : "none";
-}
-
-carregarHistoricoClientes();
-
-
-window.excluirPedido = async function(id) {
-    const confirmar = confirm("Tem certeza que deseja excluir este pedido?");
-    if (!confirmar) return;
-
-    try {
-      await deleteDoc(doc(db, "pedidos", id));
-      alert("Pedido excluído com sucesso!");
-      // Atualize a tela:
-      location.reload(); // ou uma função de recarregar os pedidos dinamicamente
-    } catch (erro) {
-      console.error("Erro ao excluir pedido:", erro);
-      alert("Erro ao excluir pedido.");
-    }
-  };
-
-
-  document.getElementById('searchInput').addEventListener('input', function () {
-    const filtro = this.value.toLowerCase();
-    const cards = document.querySelectorAll('#cardsContainer .pedido-card');
-
-    cards.forEach(card => {
-      const texto = card.innerText.toLowerCase();
-      if (texto.includes(filtro)) {
-        card.style.display = '';
-      } else {
-        card.style.display = 'none';
-      }
-    });
-  });
-
-
-
-  //aqui fica o estoque 
-
-async function cadastrarProdutoEstoque(id, nome, quantidadeInicial) {
-  const produto = {
-    id: id,
-    name: nome,
-    stock: parseInt(quantidadeInicial),
-    reserved: 0
-  };
-
-  try {
-    await setDoc(doc(db, 'estoque', id), produto);
-    alert(`✅ Produto "${nome}" cadastrado com sucesso!`);
-    document.getElementById("formCadastroProduto").reset();
-    carregarEstoque(); // se essa função existir
-  } catch (error) {
-    console.error("Erro ao cadastrar produto:", error);
-    alert("❌ Erro ao salvar produto no estoque.");
-  }
-}
-
-// Captura o envio do formulário
-document.getElementById("formCadastroProduto").addEventListener("submit", function (e) {
-  e.preventDefault();
-  const id = document.getElementById("inputId").value.trim();
-  const nome = document.getElementById("inputNome").value.trim();
-  const quantidade = document.getElementById("inputQuantidade").value;
-
-  if (id && nome && quantidade > 0) {
-    cadastrarProdutoEstoque(id, nome, quantidade);
-  }
-});
-
-
-async function carregarEstoque() {
-  const tbody = document.getElementById("inventoryBody");
-  tbody.innerHTML = "";
-
-  try {
-    const snapshot = await getDocs(collection(db, "estoque"));
-    
-    snapshot.forEach(docSnap => {
-      const produto = docSnap.data();
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${produto.id}</td>
-        <td>${produto.name || produto.nome}</td>
-        <td>${produto.stock ?? produto.quantidade}</td>
-        <td>${produto.reserved ?? produto.reservado}</td>
-        <td>
-          <button class="btn btn-sm btn-danger" onclick="removerProduto('${produto.id}')">🗑️</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } catch (error) {
-    console.error("Erro ao carregar estoque:", error);
-    tbody.innerHTML = "<tr><td colspan='5'>Erro ao carregar estoque.</td></tr>";
-  }
-}
-
-
-
-
-
-
-  
-
-
-
-
 
 
 
@@ -1635,6 +1272,7 @@ window.toggleSidebar = function () {
   sidebar.classList.toggle('collapsed');
   if (mainContent) mainContent.classList.toggle('collapsed');
 };
+
 
 
 
