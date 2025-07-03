@@ -373,6 +373,28 @@ th {
   gap: 10px;
 }
 
+.btn-excluir {
+  background-color: #e2360b;
+  color: #fff;
+  border: none;
+  padding: 8px;
+  border-radius: 50%; /* 🔁 botão redondo */
+  cursor: pointer;
+  font-weight: bold;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-excluir:hover {
+  background-color: #c62f09;
+  transform: scale(1.05);
+}
+
+
 .btn {
   background-color: #4CAF50;
   color: #fff;
@@ -619,13 +641,14 @@ th {
 .btn-toggle:hover {
   opacity: 0.85;
 }
+button.btn-Config {
+    background-color: white;
+    border: midnightblue;
+}
 
-
-
-
-
-
-
+.dropdown {
+    margin-top: -3px;
+}
   </style>
 </head>
 <body>
@@ -878,7 +901,8 @@ import {
   setDoc,
   updateDoc,
   collection,
-  addDoc
+  addDoc,
+  deleteDoc 
 } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 
 
@@ -1003,7 +1027,7 @@ import {
     }
   }
 
-  function montarEstruturaPedidos() {
+ function montarEstruturaPedidos() {
     const ordersSection = document.getElementById('ordersSection');
     ordersSection.innerHTML = `
       <div class="container-fluid">
@@ -1062,9 +1086,27 @@ import {
             <h5 class="mb-2">${pedido.id}</h5>
             <small class="text-muted"><strong>Data:</strong> ${pedido.data || ''}</small>  
             <small class="text-muted">${pedido.horario || ''}</small>
+            <!-- Botão de ações (⋮) -->
+        <div class="dropdown ">
+          <button class="btn-Config" data-bs-toggle="dropdown" title="Mais ações">
+            <i class="bi bi-three-dots-vertical"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <a class="dropdown-item" href="#" onclick="editarPedido('${pedido.id}')">
+                <i class="bi bi-pencil me-1"></i> Editar
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item text-danger" href="#" onclick="excluirPedido('${pedido.id}')">
+                <i class="bi bi-trash me-1"></i> Excluir
+              </a>
+            </li>
+          </ul>
+        </div>
           </div>
           <p class="mb-1"><strong>Cliente:</strong> ${pedido.cliente}</p>
-          <p class="mb-2"><i class="bi bi-telephone-fill me-1"></i> ${pedido.telefone || "Telefone não informado"}</p>      
+           <p class="mb-2"><i class="bi bi-telephone-fill me-1"></i> ${pedido.telefone || "Telefone não informado"}</p> 
           <p class="mb-2"><strong>Valor:</strong> ${pedido.valor}</p>        
           <div class="detalhes-pedido ${status !== 'finalizado' ? 'show' : ''}">
             <div class="border-top pt-2 mt-2">
@@ -1108,6 +1150,7 @@ import {
 
   console.log('Pedidos renderizados:', pedidos.map(p => p.id));
 }
+
 
 
 window.mudarStatus = async function(pedidoId, novoStatus) {
@@ -1468,6 +1511,22 @@ function toggleDetalhes(button) {
 }
 
 carregarHistoricoClientes();
+
+
+window.excluirPedido = async function(id) {
+    const confirmar = confirm("Tem certeza que deseja excluir este pedido?");
+    if (!confirmar) return;
+
+    try {
+      await deleteDoc(doc(db, "pedidos", id));
+      alert("Pedido excluído com sucesso!");
+      // Atualize a tela:
+      location.reload(); // ou uma função de recarregar os pedidos dinamicamente
+    } catch (erro) {
+      console.error("Erro ao excluir pedido:", erro);
+      alert("Erro ao excluir pedido.");
+    }
+  };
 
 
 
