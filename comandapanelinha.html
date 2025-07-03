@@ -706,62 +706,27 @@ button.btn-Config {
     </section>
 
     <!-- Seção de Clientes -->
-    <section id="clientsSection" style="display:none;">
-      <div class="container-fluid">
-        <h2 class="mb-4">Histórico de Clientes</h2>
-    
-        <div class="cards-container">
-    
-          <div class="pedido-card">
-            <div class="pedido-info">
-              <h5>Cliente: Ana Souza</h5>
-              <p><strong>Telefone:</strong> (11) 91234-5678</p>
-              <p><strong>Endereço:</strong> Rua das Flores, 123</p>
-              <p><strong>Último Pedido:</strong> Chocolate com Morango</p>
-              <p><strong>Data:</strong> 25/04/2025</p>
-              <p><strong>Quantidade:</strong> 2</p>
-              <p><strong>Total Gasto:</strong> R$ 20,00</p>
-              <button class="btn btn-sm btn-outline-secondary btn-detalhes w-100" onclick="toggleDetalhes(this)">
-  <i class="bi bi-list-ul me-1"></i> Detalhes
-</button>
+  <section id="clientsSection" style="display: none;">
+  <div class="container-fluid">
+    <h2 class="mb-4">Histórico de Clientes</h2>
 
-    
-              <div class="detalhes-pedido">
-                <p><strong>Pedidos Anteriores:</strong></p>
-                <ul>
-                  <li>20/04/2025 – Doce de Leite </li>
-                  <li>15/04/2025 – Ninho com Nutella </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-    
-          <div class="pedido-card">
-            <div class="pedido-info">
-              <h5>Cliente: Bruno Lima</h5>
-              <p><strong>Telefone:</strong> (11) 99876-5432</p>
-              <p><strong>Endereço:</strong> Av. Paulista, 456</p>
-              <p><strong>Último Pedido:</strong> Red Velvet</p>
-              <p><strong>Data:</strong> 24/04/2025</p>
-              <p><strong>Quantidade:</strong> 1</p>
-              <p><strong>Total Gasto:</strong> R$ 10,00</p>
-              <button class="btn btn-sm btn-outline-secondary btn-detalhes w-100" onclick="toggleDetalhes(this)">
-  <i class="bi bi-list-ul me-1"></i> Detalhes
-</button>
+    <!-- Campo de pesquisa -->
+    <div class="mb-3">
+      <input
+        type="text"
+        id="searchInput"
+        class="form-control"
+        placeholder="Buscar por nome ou telefone..."
+      />
+    </div>
 
-    
-              <div class="detalhes-pedido ${pedido.status.toLowerCase() !== 'finalizado' ? 'show' : ''}">
-                <p><strong>Pedidos Anteriores:</strong></p>
-                <ul>
-                  <li>10/04/2025 – Brigadeiro </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-    
-        </div>
-      </div>
-    </section>
+    <!-- Container dos cards -->
+    <div class="cards-container" id="cardsContainer">
+      <!-- Os cartões de pedidos serão adicionados dinamicamente aqui -->
+    </div>
+  </div>
+</section>
+
 
     <!-- Seção de Imprimir QR Code -->
 <section id="qrcodeSection" style="display:none;">
@@ -1092,11 +1057,12 @@ import {
             <i class="bi bi-three-dots-vertical"></i>
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
+            <!-- Data do pedido 
             <li>
               <a class="dropdown-item" href="#" onclick="editarPedido('${pedido.id}')">
                 <i class="bi bi-pencil me-1"></i> Editar
               </a>
-            </li>
+            </li>   fecha aqui -->
             <li>
               <a class="dropdown-item text-danger" href="#" onclick="excluirPedido('${pedido.id}')">
                 <i class="bi bi-trash me-1"></i> Excluir
@@ -1462,14 +1428,34 @@ async function carregarHistoricoClientes() {
       const ultimoPedido = pedidos[0];
       const anteriores = pedidos.slice(1);
 
-      const itensUltimo = Array.isArray(ultimoPedido.itens) ? ultimoPedido.itens : [];
-      const quantidadeTotal = itensUltimo.reduce((acc, item) => acc + (item.quantidade || 0), 0);
+      let itensUltimo = [];
 
-      const totalGasto = itensUltimo.reduce((acc, item) => {
-        const valorStr = item.valorTotal || item.valor || "R$ 0,00";
-        const valorNum = parseFloat(valorStr.replace("R$", "").replace(",", ".").trim()) || 0;
-        return acc + valorNum;
-      }, 0).toFixed(2);
+        if (Array.isArray(ultimoPedido.itens)) {
+          itensUltimo = ultimoPedido.itens;
+        } else if (typeof ultimoPedido.itens === "string") {
+          // Exemplo: "3x Bolo de Pote de Brigadeiro"
+          const partes = ultimoPedido.itens.match(/^(\d+)x\s(.+)/);
+          if (partes) {
+            const qtd = parseInt(partes[1]);
+            const nome = partes[2];
+            itensUltimo = [{ nome, quantidade: qtd }];
+          } else {
+            itensUltimo = [{ nome: ultimoPedido.itens, quantidade: 1 }];
+          }
+        }
+
+     // tenta extrair a quantidade do texto tipo "3x ..."
+            let quantidadeTotal = 1;
+
+            if (Array.isArray(itensUltimo)) {
+              quantidadeTotal = itensUltimo.reduce((acc, item) => acc + (item.quantidade || 0), 0);
+            } else if (typeof itensUltimo === "object" && itensUltimo.quantidade) {
+              quantidadeTotal = itensUltimo.quantidade;
+            }
+
+            // usa o valor do campo direto
+            const valorStr = ultimoPedido.valor || "R$ 0,00";
+            const totalGasto = parseFloat(valorStr.replace("R$", "").replace(",", ".").trim()).toFixed(2);
 
       const card = document.createElement("div");
       card.classList.add("pedido-card");
@@ -1528,6 +1514,20 @@ window.excluirPedido = async function(id) {
     }
   };
 
+
+  document.getElementById('searchInput').addEventListener('input', function () {
+    const filtro = this.value.toLowerCase();
+    const cards = document.querySelectorAll('#cardsContainer .pedido-card');
+
+    cards.forEach(card => {
+      const texto = card.innerText.toLowerCase();
+      if (texto.includes(filtro)) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
 
 
 
