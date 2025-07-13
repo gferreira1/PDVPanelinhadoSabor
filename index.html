@@ -373,28 +373,6 @@ th {
   gap: 10px;
 }
 
-.btn-excluir {
-  background-color: #e2360b;
-  color: #fff;
-  border: none;
-  padding: 8px;
-  border-radius: 50%; /* 🔁 botão redondo */
-  cursor: pointer;
-  font-weight: bold;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.btn-excluir:hover {
-  background-color: #c62f09;
-  transform: scale(1.05);
-}
-
-
 .btn {
   background-color: #4CAF50;
   color: #fff;
@@ -641,14 +619,29 @@ th {
 .btn-toggle:hover {
   opacity: 0.85;
 }
-button.btn-Config {
-    background-color: white;
-    border: midnightblue;
+
+
+.esgotado-label {
+  font-weight: bold;
+  color: red;
+  margin-top: 8px;
 }
 
-.dropdown {
-    margin-top: -3px;
+.card-produto .dropdown {
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }
+.card-produto {
+  position: relative;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  margin: 10px;
+  background: #fff;
+  box-shadow: 0 0 4px rgba(0,0,0,0.05);
+}
+
   </style>
 </head>
 <body>
@@ -706,23 +699,17 @@ button.btn-Config {
     </section>
 
     <!-- Seção de Clientes -->
-  <section id="clientsSection" style="display: none;">
+    <section id="clientsSection" style="display:none;">
   <div class="container-fluid">
     <h2 class="mb-4">Histórico de Clientes</h2>
 
-    <!-- Campo de pesquisa -->
+    <!-- Campo de Pesquisa -->
     <div class="mb-3">
-      <input
-        type="text"
-        id="searchInput"
-        class="form-control"
-        placeholder="Buscar por nome ou telefone..."
-      />
+      <input type="text" id="clienteSearchInput" class="form-control" placeholder="Pesquisar cliente por nome ou telefone...">
     </div>
 
-    <!-- Container dos cards -->
-    <div class="cards-container" id="cardsContainer">
-      <!-- Os cartões de pedidos serão adicionados dinamicamente aqui -->
+    <div class="cards-container" id="clientesCardsContainer">
+      <!-- Cards dos clientes aqui -->
     </div>
   </div>
 </section>
@@ -762,36 +749,52 @@ button.btn-Config {
 <section id="inventorySection" style="display: none;">
   <div class="container-fluid">
     <h2 class="mb-4">Controle de Estoque</h2>
-    <!-- Formulário de Cadastro -->
-<form id="formCadastroProduto" class="mb-4">
-  <div class="row g-2">
-    <div class="col-sm-3">
-      <input type="text" class="form-control" id="inputId" placeholder="ID do Produto" required>
-    </div>
-    <div class="col-sm-4">
-      <input type="text" class="form-control" id="inputNome" placeholder="Nome do Produto" required>
-    </div>
-    <div class="col-sm-3">
-      <input type="number" class="form-control" id="inputQuantidade" placeholder="Quantidade Inicial" required min="1">
-    </div>
-    <div class="col-sm-2">
-      <button type="submit" class="btn btn-primary w-100">Cadastrar</button>
-    </div>
-  </div>
-</form>
-
-    <table>
+    <table class="table table-striped">
       <thead>
         <tr>
-          <th>ID</th><th>Produto</th><th>Estoque</th><th>Reservado</th><th>Ações</th>
+          <th>ID</th>
+          <th>Produto</th>
+          <th>Estoque</th>
+          <th>Reservado</th>
+          <th>Ações</th>
         </tr>
       </thead>
       <tbody id="inventoryBody">
-        <!-- Linhas serão inseridas pelo JS -->
+        <!-- linhas inseridas via JS -->
       </tbody>
     </table>
   </div>
+
+<!-- Modal para editar estoque -->
+<div class="modal fade" id="modalEditarEstoque" tabindex="-1" aria-labelledby="modalEditarEstoqueLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="formEditarEstoque">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalEditarEstoqueLabel">Editar Estoque</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <p id="produtoNomeModal"></p>
+          <div class="mb-3">
+            <label for="inputQuantidadeEstoque" class="form-label">Quantidade em estoque</label>
+            <input type="number" class="form-control" id="inputQuantidadeEstoque" min="0" required>
+          </div>
+          <input type="hidden" id="inputProdutoIdEstoque">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
 </section>
+
 
 <!-- Seção Cadastrar Produto -->
 <section id="ProdutoSection" style="display: none;">
@@ -819,47 +822,21 @@ button.btn-Config {
 
       <!-- Categoria -->
       <div class="mb-3">
-  <label for="categoriaProduto" class="form-label">Categoria</label>
-  <div class="d-flex gap-2">
-    <select id="categoriaProduto" class="form-select" required></select>
-    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalCategoria">
-      +
-    </button>
-  </div>
-</div>
+        <label for="categoriaProduto" class="form-label">Categoria</label>
+        <select class="form-select" id="categoriaProduto" required>
+          <option value="">Selecione...</option>
+          <option value="Bolo de Pote">Bolo de Pote</option>
+          <option value="Torta">Torta</option>
+          <option value="Bebida">Bebida</option>
+        </select>
+      </div>
 
       <!-- Botões -->
       <div class="d-flex justify-content-between">
-       <!--<button type="button" class="btn btn-outline-secondary" onclick="setActiveSection('ProdutoSection')">Cancelar</button>--> 
-       <button id="btnCadastrar" type="submit" class="btn btn-success">
-  <i class="bi bi-plus-lg"></i> Cadastrar Produto
-</button>
-
-      </div>
-
-      
-    </form>
-
-      <!-- Modal para Cadastrar Categoria -->
-<div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalCategoriaLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form id="formCategoria" class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalCategoriaLabel">Nova Categoria</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <label for="nomeCategoria" class="form-label">Nome da Categoria</label>
-        <input type="text" id="nomeCategoria" class="form-control" required />
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Salvar</button>
+        <button type="button" class="btn btn-outline-secondary" onclick="setActiveSection('ProdutoSection')">Cancelar</button>
+        <button type="submit" class="btn btn-success"><i class="bi bi-plus-lg"></i> Cadastrar Produto</button>
       </div>
     </form>
-  </div>
-</div>
-
-
   </div>
 </section>
 
@@ -875,142 +852,151 @@ button.btn-Config {
 
   <!-- SCRIPTS -->
 <!-- Adicione isso NO HEAD do HTML -->
+<!-- SCRIPTS -->
+<!-- Adicione isso NO HEAD do HTML -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
 import {
   getFirestore,
   doc,
-  getDoc,getDocs,
+  getDoc, getDocs,
   setDoc,
   updateDoc,
   collection,
   addDoc,
-  deleteDoc 
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 
+const firebaseConfig = {
+  apiKey: "AIzaSyDimXW0l-O_tmRhNH-WWgZqXGucX3Zk4hc",
+  authDomain: "panelinha-fe407.firebaseapp.com",
+  projectId: "panelinha-fe407",
+  storageBucket: "panelinha-fe407.appspot.com",
+  messagingSenderId: "1006485480860",
+  appId: "1:1006485480860:web:ded54166d6bfad4f649459",
+  measurementId: "G-BM581Q8TKX"
+};
 
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
+function setActiveSection(sectionIdToShow, clickedNav) {
+  const sections = ['ordersSection', 'clientsSection', 'inventorySection', 'ProdutoSection','cardapioSection'];
+  const navButtons = ['nav-orders', 'nav-clients', 'nav-inventory', 'nav-produto' ,'nav-cardapio'];
 
-  // Configuração dohttp://www.bb.com.br/portalbb/page251,116,2018,1,1,1,1.bb?codigoMenu=164&codigoNoticia=1333 Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyDimXW0l-O_tmRhNH-WWgZqXGucX3Zk4hc",
-    authDomain: "panelinha-fe407.firebaseapp.com",
-    projectId: "panelinha-fe407",
-    storageBucket: "panelinha-fe407.appspot.com",
-    messagingSenderId: "1006485480860",
-    appId: "1:1006485480860:web:ded54166d6bfad4f649459",
-    measurementId: "G-BM581Q8TKX"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // Navegação entre seções
-  function setActiveSection(sectionIdToShow, clickedNav) {
-    const sections = ['ordersSection', 'clientsSection', 'inventorySection', 'ProdutoSection','cardapioSection'];
-    const navButtons = ['nav-orders', 'nav-clients', 'nav-inventory', 'nav-produto' ,'nav-cardapio'];
-
-    sections.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = (id === sectionIdToShow) ? '' : 'none';
-    });
-
-    navButtons.forEach(id => {
-      const nav = document.getElementById(id);
-      if (nav) nav.classList.remove('active');
-    });
-
-    if (clickedNav) clickedNav.classList.add('active');
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('nav-orders')?.addEventListener('click', e => {
-      e.preventDefault();
-      setActiveSection('ordersSection', e.target);
-    });
-
-    document.getElementById('nav-clients')?.addEventListener('click', e => {
-      e.preventDefault();
-      setActiveSection('clientsSection', e.target);
-    });
-
-    document.getElementById('nav-cardapio')?.addEventListener('click', e => {
-      e.preventDefault();
-      setActiveSection('cardapioSection', e.target);
-    });
-
-    document.getElementById('nav-inventory')?.addEventListener('click', e => {
-      e.preventDefault();
-      setActiveSection('inventorySection', e.target);
-    });
-
-    document.getElementById('nav-produto')?.addEventListener('click', e => {
-      e.preventDefault();
-      setActiveSection('ProdutoSection', e.target);
-    });
-
-    montarEstruturaPedidos();
-    carregarPedidos();
-    renderInventory();
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = (id === sectionIdToShow) ? '' : 'none';
   });
 
-  const initialProducts = [
-    { id: 1, name: 'Bolo de Pote de Limão', stock: 2, reserved: 0 },
-    { id: 2, name: 'Bolo de Pote de Brigadeiro', stock: 5, reserved: 0 },
-    { id: 3, name: 'Mini Pizza Calabresa', stock: 15, reserved: 0 },
-    { id: 4, name: 'Pizza Broto 4 Queijos', stock: 5, reserved: 0 }
-  ];
-  let products = JSON.parse(localStorage.getItem('products')) || initialProducts;
+  navButtons.forEach(id => {
+    const nav = document.getElementById(id);
+    if (nav) nav.classList.remove('active');
+  });
 
-  function saveProducts() {
-    localStorage.setItem('products', JSON.stringify(products));
-  }
+  if (clickedNav) clickedNav.classList.add('active');
+}
 
-  function renderInventory() {
-    const tbody = document.getElementById('inventoryBody');
-    tbody.innerHTML = '';
-    products.forEach((prod, i) => {
-      const canAction = prod.stock > 0;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${prod.id}</td>
-        <td>${prod.name}</td>
-        <td id="stock-${i}">${prod.stock}</td>
-        <td id="reserved-${i}">${prod.reserved}</td>
-        <td>
-          <button class="btn-status buy" onclick="buyProduct(${i})" ${canAction ? '' : 'disabled'}>Comprar</button>
-          <button class="btn-status reserve" onclick="reserveProduct(${i})" ${canAction ? '' : 'disabled'}>Reservar</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('nav-orders')?.addEventListener('click', e => {
+    e.preventDefault();
+    setActiveSection('ordersSection', e.target);
+  });
 
-  window.buyProduct = function(idx) {
-    const product = products[idx];
-    if (product.stock > 0) {
-      product.stock--;
-      if (product.reserved > 0) product.reserved--;
-      saveProducts();
-      renderInventory();
-    } else {
-      alert('Estoque esgotado.');
-    }
-  }
+  document.getElementById('nav-clients')?.addEventListener('click', e => {
+    e.preventDefault();
+    setActiveSection('clientsSection', e.target);
+  });
 
-  window.reserveProduct = function(idx) {
-    const product = products[idx];
-    if (product.stock > 0) {
-      product.stock--;
-      product.reserved++;
-      saveProducts();
-      renderInventory();
-    } else {
-      alert('Estoque insuficiente para reservar.');
-    }
-  }
+  document.getElementById('nav-cardapio')?.addEventListener('click', e => {
+    e.preventDefault();
+    setActiveSection('cardapioSection', e.target);
+  });
 
- function montarEstruturaPedidos() {
+  document.getElementById('nav-inventory')?.addEventListener('click', e => {
+    e.preventDefault();
+    setActiveSection('inventorySection', e.target);
+  });
+
+  document.getElementById('nav-produto')?.addEventListener('click', e => {
+    e.preventDefault();
+    setActiveSection('ProdutoSection', e.target);
+  });
+
+  montarEstruturaPedidos();
+  carregarPedidos();
+  renderInventory();
+  carregarHistoricoClientes();
+  carregarCardapio();
+});
+
+async function renderInventory() {
+  const tbody = document.getElementById('inventoryBody');
+  if (!tbody) return console.warn('Elemento tbody #inventoryBody não encontrado');
+  tbody.innerHTML = '';
+
+  const produtosSnap = await getDocs(collection(db, 'cadastros', 'produtos', 'produto'));
+  const estoqueSnap = await getDocs(collection(db, 'estoque'));
+  const estoqueMap = {};
+  estoqueSnap.forEach(doc => {
+    estoqueMap[doc.id] = doc.data();
+  });
+    produtosSnap.forEach((doc) => {
+    const produto = doc.data();
+    const estoque = estoqueMap[doc.id] || { stock: 0, reserved: 0 };
+    const podeComprar = estoque.stock > 0;
+
+    const tr = document.createElement('tr');
+tr.innerHTML = `
+  <td>${doc.id}</td>
+  <td>
+    <img src="${produto.image || 'https://via.placeholder.com/50'}" alt="${produto.name}" style="width:50px; height:50px; object-fit:cover; border-radius:4px; margin-right:8px;">
+    <strong>${produto.name}</strong> <br>
+  </td>
+  <td>${estoque.stock}</td>
+  <td>${estoque.reserved || 0}</td>
+  <td>
+    <button class="btn btn-sm btn-primary" onclick="abrirModalEditarEstoque('${doc.id}', '${produto.nome}', ${estoque.stock})">
+      Editar Estoque
+    </button>
+  </td>
+`;
+tbody.appendChild(tr);
+
+  });
+}
+
+window.buyProduct = async function(id) {
+  const ref = doc(db, 'estoque', id);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return alert("Produto não encontrado no estoque");
+
+  const produto = snap.data();
+  if (produto.stock <= 0) return alert("Estoque esgotado.");
+
+  await updateDoc(ref, {
+    stock: produto.stock - 1,
+    reserved: Math.max((produto.reserved || 0) - 1, 0)
+  });
+  renderInventory();
+};
+
+window.reserveProduct = async function(id) {
+  const ref = doc(db, 'estoque', id);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return alert("Produto não encontrado no estoque");
+
+  const produto = snap.data();
+  if (produto.stock <= 0) return alert("Estoque insuficiente para reservar.");
+
+  await updateDoc(ref, {
+    stock: produto.stock - 1,
+    reserved: (produto.reserved || 0) + 1
+  });
+  renderInventory();
+};
+
+  function montarEstruturaPedidos() {
     const ordersSection = document.getElementById('ordersSection');
     ordersSection.innerHTML = `
       <div class="container-fluid">
@@ -1048,7 +1034,6 @@ import {
 
   pedidos.forEach(pedido => {
     const status = typeof pedido.status === 'string' ? pedido.status.toLowerCase() : 'desconhecido';
-
     const itensFormatados = (Array.isArray(pedido.itens)
       ? pedido.itens
       : (typeof pedido.itens === 'string' ? pedido.itens.split(',') : [])
@@ -1062,62 +1047,69 @@ import {
       }
     }).join('');
 
-    const cardHTML = `
-      <div class="pedido-card status-${status}">
-        <div class="pedido-info">
-          <div class="d-flex justify-content-between align-items-start">
-            <h5 class="mb-2">${pedido.id}</h5>
-            <small class="text-muted"><strong>Data:</strong> ${pedido.data || ''}</small>  
-            <small class="text-muted">${pedido.horario || ''}</small>
-            <!-- Botão de ações (⋮) -->
-        <div class="dropdown ">
-          <button class="btn-Config" data-bs-toggle="dropdown" title="Mais ações">
-            <i class="bi bi-three-dots-vertical"></i>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <!-- Data do pedido 
-            <li>
-              <a class="dropdown-item" href="#" onclick="editarPedido('${pedido.id}')">
-                <i class="bi bi-pencil me-1"></i> Editar
-              </a>
-            </li>   fecha aqui -->
-            <li>
-              <a class="dropdown-item text-danger" href="#" onclick="excluirPedido('${pedido.id}')">
-                <i class="bi bi-trash me-1"></i> Excluir
-              </a>
-            </li>
+const cardHTML = `
+  <div class="pedido-card status-${status}">
+    <div class="pedido-info">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <h5 class="mb-2">${pedido.id}</h5>
+          <small class="text-muted"><strong>Data:</strong> ${pedido.data || ''}</small><br>  
+          <small class="text-muted">${pedido.horario || ''}</small>
+        </div>
+
+        ${status === 'recebido' ? `
+          <div class="dropdown ms-2">
+            <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <a class="dropdown-item text-danger" href="#" onclick="excluirPedido('${pedido.id}')">
+                  🗑 Cancelar Pedido
+                </a>
+              </li>
+            </ul>
+          </div>
+        ` : ''}
+      </div>
+
+      <p class="mb-1"><strong>Cliente:</strong> ${pedido.cliente}</p>
+      <p class="mb-2"><strong>Valor:</strong> ${pedido.valor}</p>        
+      <div class="detalhes-pedido ${status !== 'finalizado' ? 'show' : ''}">
+        <div class="border-top pt-2 mt-2">
+          <p class="mb-1"><strong>Itens:</strong></p>
+          <ul class="list-unstyled ps-3">
+            ${itensFormatados}
           </ul>
-        </div>
-          </div>
-          <p class="mb-1"><strong>Cliente:</strong> ${pedido.cliente}</p>
-           <p class="mb-2"><i class="bi bi-telephone-fill me-1"></i> ${pedido.telefone || "Telefone não informado"}</p> 
-          <p class="mb-2"><strong>Valor:</strong> ${pedido.valor}</p>        
-          <div class="detalhes-pedido ${status !== 'finalizado' ? 'show' : ''}">
-            <div class="border-top pt-2 mt-2">
-              <p class="mb-1"><strong>Itens:</strong></p>
-              <ul class="list-unstyled ps-3">
-                ${itensFormatados}
-              </ul>
-              <p class="mb-1"><strong>Pagamento:</strong> ${pedido.pagamento || 'Não informado'}</p>
-              ${pedido.observacoes ? `<p class="mb-1"><strong>Observações:</strong> ${pedido.observacoes}</p>` : ''}
-            </div>
-          </div>
-        </div>
-        <div class="pedido-actions mt-2">
-          ${status === 'recebido' ? 
-            `<button class="btn btn-sm btn-primary w-100 mb-2" onclick="mudarStatus('${pedido.id}', 'producao')">
-              <i class="bi bi-play-fill me-1"></i> Produzir
-            </button>` : ''}
-          ${status === 'producao' ? 
-            `<button class="btn btn-sm btn-success w-100 mb-2" onclick="mudarStatus('${pedido.id}', 'finalizado')">
-              <i class="bi bi-check-lg me-1"></i> Finalizar
-            </button>` : ''}
-          <button class="btn btn-sm btn-outline-secondary btn-detalhes w-100" onclick="toggleDetalhes(this)">
-            <i class="bi bi-list-ul me-1"></i> Detalhes
-          </button>
+          <p class="mb-1"><strong>Pagamento:</strong> ${pedido.pagamento || 'Não informado'}</p>
+          ${pedido.observacoes ? `<p class="mb-1"><strong>Observações:</strong> ${pedido.observacoes}</p>` : ''}
         </div>
       </div>
-    `;
+    </div>
+
+    <div class="pedido-actions mt-2">
+      ${status === 'recebido' ? `
+        <button class="btn btn-sm btn-primary w-100 mb-2" onclick="mudarStatus('${pedido.id}', 'producao')">
+          <i class="bi bi-play-fill me-1"></i> Produzir
+        </button>
+      ` : ''}
+
+      ${status === 'producao' ? `
+        <button class="btn btn-sm btn-success w-100 mb-2" onclick="mudarStatus('${pedido.id}', 'finalizado')">
+          <i class="bi bi-check-lg me-1"></i> Finalizar
+        </button>
+      ` : ''}
+
+      <button class="btn btn-sm btn-outline-secondary btn-detalhes w-100" onclick="toggleDetalhes(this)">
+        <i class="bi bi-list-ul me-1"></i> Detalhes
+      </button>
+    </div>
+  </div>
+`;
+
+
+
+
 
     const containerId = {
       'recebido': 'recebidos-container',
@@ -1127,14 +1119,9 @@ import {
 
     if (containerId) {
       document.getElementById(containerId)?.insertAdjacentHTML('beforeend', cardHTML);
-    } else {
-      console.warn(`Pedido ${pedido.id} com status desconhecido:`, pedido.status);
     }
   });
-
-  console.log('Pedidos renderizados:', pedidos.map(p => p.id));
 }
-
 
 
 window.mudarStatus = async function(pedidoId, novoStatus) {
@@ -1161,175 +1148,90 @@ window.mudarStatus = async function(pedidoId, novoStatus) {
 }
 
 
-  window.toggleDetalhes = function(botao) {
-    const card = botao.closest('.pedido-card');
-    if (!card) return;
+window.toggleDetalhes = function(botao) {
+  const card = botao.closest('.pedido-card');
+  if (!card) return;
 
-    const detalhes = card.querySelector('.detalhes-pedido');
-    if (!detalhes) return;
+  const detalhes = card.querySelector('.detalhes-pedido');
+  if (!detalhes) return;
 
-    if (detalhes.classList.contains('show')) {
-      detalhes.classList.remove('show');
-      botao.innerHTML = '<i class="bi bi-chevron-down me-1"></i> Ver Mais';
-    } else {
-      detalhes.classList.add('show');
-      botao.innerHTML = '<i class="bi bi-chevron-up me-1"></i> Ver Menos';
-    }
-  }
-
-  window.onload = () => {
-    setActiveSection('ordersSection', document.getElementById('nav-orders'));
-    renderInventory();
-  }
-
-
-// 🔹 Listener para o formulário de produto
-document.getElementById('formProduto').addEventListener('submit', cadastrarProduto);
-
-// 🔹 Carrega categorias no <select>
-async function carregarCategorias() {
-  const select = document.getElementById('categoriaProduto');
-  select.innerHTML = '<option value="">Selecione uma categoria</option>';
-
-  try {
-    const snapshot = await getDocs(collection(db, 'cadastros', 'categorias', 'categoria'));
-    snapshot.forEach(docSnap => {
-      const nome = docSnap.data()["categoria nome"];
-      if (nome) {
-        const option = document.createElement('option');
-        option.value = nome;
-        option.textContent = nome;
-        select.appendChild(option);
-      }
-    });
-  } catch (erro) {
-    console.error("Erro ao carregar categorias:", erro);
-    select.innerHTML = '<option value="">Erro ao carregar</option>';
+  if (detalhes.style.display === 'none' || detalhes.style.display === '') {
+    detalhes.style.display = 'block';
+    botao.innerHTML = '<i class="bi bi-chevron-up me-1"></i> Ver Menos';
+  } else {
+    detalhes.style.display = 'none';
+    botao.innerHTML = '<i class="bi bi-chevron-down me-1"></i> Ver Mais';
   }
 }
 
-// 🔹 Cadastra nova categoria via modal
-document.getElementById('formCategoria').addEventListener('submit', async function (event) {
-  event.preventDefault();
-  const nomeCategoria = document.getElementById('nomeCategoria').value.trim();
+document.getElementById('formProduto').addEventListener('submit', cadastrarProduto);
 
-  if (!nomeCategoria) {
-    alert("Digite o nome da categoria.");
-    return;
-  }
-
-  try {
-    const snapshot = await getDocs(collection(db, 'cadastros', 'categorias', 'categoria'));
-    const existe = snapshot.docs.some(doc =>
-      doc.data()["categoria nome"]?.toLowerCase() === nomeCategoria.toLowerCase()
-    );
-
-    if (existe) {
-      alert("Essa categoria já existe.");
-    } else {
-      const docRef = await addDoc(collection(db, 'cadastros', 'categorias', 'categoria'), {
-        "categoria nome": nomeCategoria
-      });
-      await updateDoc(docRef, { "categoria id": docRef.id });
-      console.log(`✅ Categoria '${nomeCategoria}' cadastrada.`);
-
-      await carregarCategorias(); // Atualiza <select>
-
-      // 🔹 Seleciona a nova categoria no select
-      setTimeout(() => {
-        const select = document.getElementById('categoriaProduto');
-        for (const option of select.options) {
-          if (option.value.toLowerCase() === nomeCategoria.toLowerCase()) {
-            select.value = option.value;
-            break;
-          }
-        }
-      }, 300); // pequeno delay para garantir que as opções já foram renderizadas
-
-      // Fecha o modal
-      const modal = bootstrap.Modal.getInstance(document.getElementById('modalCategoria'));
-      modal.hide();
-
-      // Limpa o campo do modal
-      document.getElementById('formCategoria').reset();
-    }
-  } catch (erro) {
-    console.error("Erro ao cadastrar categoria:", erro);
-    alert("Erro ao cadastrar categoria.");
-  }
-});
+async function gerarProximoId() {
+  const colRef = collection(db, 'cadastros', 'produtos', 'produto');
+  const snapshot = await getDocs(colRef);
+  const ids = snapshot.docs
+    .map(doc => parseInt(doc.id))
+    .filter(num => !isNaN(num));
+  const proximo = ids.length > 0 ? Math.max(...ids) + 1 : 1;
+  return proximo.toString().padStart(4, '0'); // Ex: '0001'
+}
 
 
-// 🔹 Cadastra produto com imagem e categoria
 async function cadastrarProduto(event) {
   event.preventDefault();
 
-  const nome = document.getElementById('nomeProduto').value.trim();
-  const preco = parseFloat(document.getElementById('precoProduto').value);
-  const categoria = document.getElementById('categoriaProduto').value.trim();
+  const name = document.getElementById('nomeProduto').value.trim();
+  const priceRaw = document.getElementById('precoProduto').value;
+  const category = document.getElementById('categoriaProduto').value;
   const imagem = document.getElementById('imagemProduto').files[0];
 
-  if (!nome || isNaN(preco) || !categoria || !imagem) {
+  const price = parseFloat(priceRaw.replace(',', '.'));
+  if (!name || !category || isNaN(price)) {
     alert("Preencha todos os campos corretamente.");
     return;
   }
 
-  const btn = document.getElementById("btnCadastrar");
-  btn.disabled = true;
-  btn.textContent = "Cadastrando...";
-
-  try {
-    // 1️⃣ Converte imagem para base64 usando Promise
-    const imagemBase64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject("Erro ao ler imagem.");
-      reader.readAsDataURL(imagem);
-    });
-
-    // 2️⃣ Salva o produto
-    const docRef = await addDoc(
-      collection(db, 'cadastros', 'produtos', 'produto'),
-      {
-        nome,
-        preco,
-        categoria,
-        imagemBase64,
-        criadoEm: new Date().toISOString(),
-        disponivel: true
-      }
-    );
-
-    await updateDoc(docRef, { "produto id": docRef.id });
-
-    // 3️⃣ Verifica e cria categoria se necessário
-    const snap = await getDocs(collection(db, 'cadastros', 'categorias', 'categoria'));
-    const categoriaExiste = snap.docs.some(doc =>
-      doc.data()["categoria nome"]?.toLowerCase() === categoria.toLowerCase()
-    );
-
-    if (!categoriaExiste) {
-      const novaRef = await addDoc(
-        collection(db, 'cadastros', 'categorias', 'categoria'),
-        { "categoria nome": categoria }
-      );
-      await updateDoc(novaRef, { "categoria id": novaRef.id });
-      console.log(`✅ Categoria '${categoria}' cadastrada automaticamente.`);
-      await carregarCategorias();
-    }
-
-    alert("✅ Produto cadastrado com sucesso!");
-    document.getElementById("formProduto").reset();
-  } catch (erro) {
-    console.error("Erro ao cadastrar produto:", erro);
-    alert("Erro ao cadastrar o produto.");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Cadastrar Produto";
+  if (!imagem) {
+    alert("Selecione uma imagem.");
+    return;
   }
+
+  const reader = new FileReader();
+  reader.onload = async function () {
+    const imageBase64 = reader.result;
+
+    try {
+      const newId = await gerarProximoId();
+      const priceFormatado = price.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      });
+
+      await setDoc(doc(db, 'cadastros', 'produtos', 'produto', newId), {
+        id: newId,
+        category,
+        name,
+        price: priceFormatado,
+        image: imageBase64,
+        disponivel: true,
+        createdAt: new Date().toISOString()
+      });
+
+      await setDoc(doc(db, 'estoque', newId), {
+        stock: 0,
+        reserved: 0,
+      });
+
+      alert(`Produto cadastrado com sucesso! ID: ${newId}`);
+      document.getElementById("formProduto").reset();
+    } catch (erro) {
+      console.error("Erro ao cadastrar produto:", erro);
+      alert("Erro ao cadastrar o produto. Tente novamente.");
+    }
+  };
+  reader.readAsDataURL(imagem);
 }
 
-window.addEventListener('DOMContentLoaded', carregarCategorias);
 
 
 
@@ -1339,32 +1241,49 @@ async function carregarCardapio() {
   container.innerHTML = "";
 
   try {
-    const snapshot = await getDocs(collection(db, 'cadastros', 'produtos', 'produto'));
-    if (snapshot.empty) {
+    const produtosSnap = await getDocs(collection(db, 'cadastros', 'produtos', 'produto'));
+    const estoqueSnap = await getDocs(collection(db, 'estoque'));
+    const estoques = {};
+    estoqueSnap.forEach(doc => {
+      estoques[doc.id] = doc.data();
+    });
+
+    if (produtosSnap.empty) {
       container.innerHTML = "<p>Nenhum produto cadastrado.</p>";
       return;
     }
 
-    snapshot.forEach(docSnap => {
+    produtosSnap.forEach(docSnap => {
       const produto = docSnap.data();
       const id = docSnap.id;
 
-      /* 1️⃣  Considera “verdadeiro” por padrão se o campo não existir  */
-      const disponivel = produto.disponivel !== false;  
+      const disponivel = produto.disponivel !== false;
+      const est = estoques[id] || { stock: 0 };
+      const esgotado = est.stock <= 0;
 
       const card = document.createElement("div");
       card.className = "card-produto";
       card.innerHTML = `
-        <img src="${produto.imagemBase64 || 'https://via.placeholder.com/150?text=Sem+imagem'}" alt="${produto.nome}">
-        <strong>${produto.nome}</strong>
-        <div class="preco">R$ ${Number(produto.preco).toFixed(2)}</div>
+        <img src="${produto.image || 'https://via.placeholder.com/50'}" alt="${produto.name}" style="width:50px; height:50px; object-fit:cover; border-radius:4px; margin-right:8px;">
+        <strong>${produto.name}</strong> <br>
+        <div class="preco">${produto.price}</div>
+        <small class="text-muted">${produto.category}</small>
 
-        <!-- 2️⃣  Usa a variável ‘disponivel’ para cor/classe/label -->
-        <button
-          class="btn-toggle ${disponivel ? 'disponivel' : 'indisponivel'}"
-          onclick="alterarDisponibilidade('${id}', ${!disponivel})">
-          ${disponivel ? '✅ Disponível' : '❌ Indisponível'}
-        </button>
+
+        <div class="dropdown text-end mt-2">
+          <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-three-dots-vertical"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" onclick="editarProduto('${id}')">✏️ Editar</a></li>
+            <li><a class="dropdown-item" href="#" onclick="excluirProduto('${id}')">🗑️ Excluir</a></li>
+            <li><a class="dropdown-item" href="#" onclick="alterarDisponibilidade('${id}', ${!disponivel})">
+              ${disponivel ? '❌ Marcar como Indisponível' : '✅ Marcar como Disponível'}
+            </a></li>
+          </ul>
+        </div>
+
+        ${esgotado ? `<div class="esgotado-label">❌ Esgotado</div>` : ''}
         <hr>
       `;
       container.appendChild(card);
@@ -1375,16 +1294,33 @@ async function carregarCardapio() {
   }
 }
 
+window.editarProduto = function (id) {
+  alert(`Função de edição chamada para ID: ${id}`);
+  // Aqui você vai abrir o modal e carregar os dados
+};
+
+window.excluirProduto = async function (id) {
+  if (!confirm("Tem certeza que deseja excluir este produto?")) return;
+
+  try {
+    await deleteDoc(doc(db, 'cadastros', 'produtos', 'produto', id));
+    await deleteDoc(doc(db, 'estoque', id));
+    alert("Produto excluído com sucesso.");
+    carregarCardapio();
+  } catch (erro) {
+    console.error("Erro ao excluir produto:", erro);
+    alert("Erro ao excluir produto.");
+  }
+};
+
+
+
 /* 3️⃣  Continua igual: faz update e recarrega a lista */
 window.alterarDisponibilidade = async function (produtoId, novoStatus) {
-  console.log('⏩ alterando', produtoId, 'para', novoStatus);   // <-- veja no console
-
-  const ref = doc(db, 'cadastros', 'produtos', 'produto', produtoId);
-  console.log('📄 path:', ref.path);                           // caminho final
+   const ref = doc(db, 'cadastros', 'produtos', 'produto', produtoId);
 
   try {
     await updateDoc(ref, { disponivel: novoStatus });
-    console.log('✅ update ok');
     carregarCardapio();
   } catch (erro) {
     console.error('❌ updateDoc falhou:', erro);
@@ -1392,241 +1328,210 @@ window.alterarDisponibilidade = async function (produtoId, novoStatus) {
   }
 };
 
-
-
-
-
-console.log("⚡ Função carregarCardapio foi chamada!");
-carregarCardapio();
-
-
-
 async function corrigirProdutosAntigos() {
   const snap = await getDocs(collection(db, 'cadastros', 'produtos', 'produto'));
   for (const docSnap of snap.docs) {
     const dados = docSnap.data();
     if (typeof dados.disponivel === 'undefined') {
       await updateDoc(docSnap.ref, { disponivel: true });
-      console.log("Corrigido:", docSnap.id);
     }
   }
 }
 
+
+
 async function carregarHistoricoClientes() {
-  const container = document.querySelector("#clientsSection .cards-container");
-  container.innerHTML = "";
+  const container = document.querySelector('#clientsSection .cards-container');
+  if (!container) return console.warn("Container histórico clientes não encontrado");
+
+  container.innerHTML = 'Carregando histórico de clientes...';
 
   try {
-    const snapshot = await getDocs(collection(db, "pedidos"));
-
+    const snapshot = await getDocs(collection(db, 'pedidos'));
     if (snapshot.empty) {
-      container.innerHTML = "<p>Nenhum pedido encontrado.</p>";
+      container.innerHTML = '<p>Nenhum pedido encontrado no histórico.</p>';
       return;
     }
 
-    const historico = {};
+    // Agrupa pedidos por cliente+telefone
+    const clientes = {};
 
-    snapshot.forEach(doc => {
-      const pedido = doc.data();
-      const cliente = pedido.cliente || "Cliente sem nome";
+    console.log('Pedidos carregados do Firestore:', snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-      if (!historico[cliente]) historico[cliente] = [];
-      historico[cliente].push(pedido);
-    });
 
-    for (const cliente in historico) {
-      const pedidos = historico[cliente];
+    snapshot.forEach(docSnap => {
+  const pedido = docSnap.data();
+  const id = docSnap.id;  // id do pedido
 
-      pedidos.sort((a, b) => {
-        const dtA = new Date(a.data.split("/").reverse().join("-") + "T" + (a.horario || "00:00"));
-        const dtB = new Date(b.data.split("/").reverse().join("-") + "T" + (b.horario || "00:00"));
-        return dtB - dtA;
+  const nome = pedido.cliente || 'Cliente sem nome';
+  const telefone = pedido.telefone || 'Telefone não informado';
+  const endereco = pedido.endereco || 'Endereço não informado';
+  const dataPedido = pedido.data || '';
+  const itens = pedido.itens || [];
+  const valor = pedido.valor || 0;
+
+  const key = nome + '|' + telefone;
+
+  if (!clientes[key]) {
+    clientes[key] = {
+      nome,
+      telefone,
+      endereco,
+      pedidos: []
+    };
+  }
+
+  clientes[key].pedidos.push({
+    id,          // <-- aqui é onde o id do pedido deve entrar!
+    data: dataPedido,
+    itens,
+    valor
+  });
+});
+
+    // Monta o HTML de cada cliente
+    let html = '';
+    for (const key in clientes) {
+      const cliente = clientes[key];
+      const pedidosOrdenados = cliente.pedidos.sort((a,b) => {
+        // ordenar por data decrescente (mais recente primeiro)
+        return new Date(b.data.split('/').reverse().join('-')) - new Date(a.data.split('/').reverse().join('-'));
       });
 
-      const ultimoPedido = pedidos[0];
-      const anteriores = pedidos.slice(1);
+      const ultimoPedido = pedidosOrdenados[0];
+      const pedidosAnteriores = pedidosOrdenados.slice(1);
 
-      let itensUltimo = [];
-
-        if (Array.isArray(ultimoPedido.itens)) {
-          itensUltimo = ultimoPedido.itens;
-        } else if (typeof ultimoPedido.itens === "string") {
-          // Exemplo: "3x Bolo de Pote de Brigadeiro"
-          const partes = ultimoPedido.itens.match(/^(\d+)x\s(.+)/);
-          if (partes) {
-            const qtd = parseInt(partes[1]);
-            const nome = partes[2];
-            itensUltimo = [{ nome, quantidade: qtd }];
-          } else {
-            itensUltimo = [{ nome: ultimoPedido.itens, quantidade: 1 }];
-          }
+      // Soma total gasto
+      const totalGasto = pedidosOrdenados.reduce((acc, p) => {
+        // tenta converter para número — ajustar se seu formato for string "R$ 10,00"
+        let val = 0;
+        if (typeof p.valor === 'string') {
+          val = parseFloat(p.valor.replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+        } else {
+          val = p.valor;
         }
+        return acc + val;
+      }, 0);
 
-     // tenta extrair a quantidade do texto tipo "3x ..."
-            let quantidadeTotal = 1;
+      // Quantidade total pedidos
+      const qtdPedidos = pedidosOrdenados.length;
 
-            if (Array.isArray(itensUltimo)) {
-              quantidadeTotal = itensUltimo.reduce((acc, item) => acc + (item.quantidade || 0), 0);
-            } else if (typeof itensUltimo === "object" && itensUltimo.quantidade) {
-              quantidadeTotal = itensUltimo.quantidade;
-            }
+      // Itens do último pedido (exemplo: lista nomes e quantidades)
+      const itensUltimoPedidoHtml = Array.isArray(ultimoPedido.itens)
+        ? ultimoPedido.itens.map(item => {
+          if (typeof item === 'object') {
+            const nomeItem = item.nome || item.produto || 'Item';
+            const qtd = item.quantidade || item.qtd || 1;
+            return `<li>• ${qtd}x ${nomeItem}</li>`;
+          } else {
+            return `<li>• ${item}</li>`;
+          }
+        }).join('')
+        : '';
 
-            // usa o valor do campo direto
-            const valorStr = ultimoPedido.valor || "R$ 0,00";
-            const totalGasto = parseFloat(valorStr.replace("R$", "").replace(",", ".").trim()).toFixed(2);
+      // Pedidos anteriores listados só com data + itens simples
+      const pedidosAnterioresHtml = pedidosAnteriores.length > 0
+        ? pedidosAnteriores.map(p => `<li>${p.data} – ${Array.isArray(p.itens) ? p.itens.map(i => typeof i === 'object' ? i.nome || i.produto || 'Item' : i).join(', ') : p.itens}</li>`).join('')
+        : '<li>Sem pedidos anteriores</li>';
 
-      const card = document.createElement("div");
-      card.classList.add("pedido-card");
-      card.innerHTML = `
-        <div class="pedido-info">
-          <h5 class="mb-2"><i class="bi bi-person-circle me-1"></i> ${cliente}</h5>
-          <p class="mb-2"><i class="bi bi-telephone-fill me-1"></i> ${ultimoPedido.telefone || "Telefone não informado"}</p>
-          <p><i class="bi bi-clock me-1"></i><strong>Data:</strong> ${ultimoPedido.data} ${ultimoPedido.horario || ""}</p>
-          <p><i class="bi bi-box me-1"></i><strong>Último Pedido:</strong> ${itensUltimo.map(i => i.nome).join(", ")}</p>
-          <p><i class="bi bi-stack me-1"></i><strong>Quantidade:</strong> ${quantidadeTotal}</p>
-          <p><i class="bi bi-cash me-1"></i><strong>Total Gasto:</strong> R$ ${totalGasto}</p>
-          ${anteriores.length > 0 ? `
-            <button class="btn btn-sm btn-outline-secondary btn-detalhes w-100 mt-2" onclick="toggleDetalhes(this)">
-              <i class="bi bi-list-ul me-1"></i> Ver Pedidos Anteriores
+      html += `
+        <div class="pedido-card">
+          <div class="pedido-info">
+            <h5 class="mb-1">Pedido: <strong>#${ultimoPedido.id}</strong></h5>
+            <h5>Cliente: ${cliente.nome}</h5>
+            <p><strong>Telefone:</strong> ${cliente.telefone}</p>
+            <p><strong>Endereço:</strong> ${cliente.endereco}</p>
+            <p><strong>Último Pedido:</strong></p>
+            <ul>${itensUltimoPedidoHtml}</ul>
+            <p><strong>Data:</strong> ${ultimoPedido.data}</p>
+            <p><strong>Quantidade:</strong> ${qtdPedidos}</p>
+            <p><strong>Total Gasto:</strong> R$ ${totalGasto.toFixed(2)}</p>
+
+            <button class="btn btn-sm btn-outline-secondary btn-detalhes w-100" onclick="toggleDetalhes(this)">
+              <i class="bi bi-list-ul me-1"></i> Detalhes
             </button>
-            <div class="detalhes-pedido mt-2" style="display:none;">
-              <ul>
-                ${anteriores.map(p => {
-                  const itens = Array.isArray(p.itens) ? p.itens : [];
-                  return `<li>${p.data} – ${itens.map(i => i.nome).join(", ")}</li>`;
-                }).join("")}
-              </ul>
+
+            <div class="detalhes-pedido" style="display:none;">
+              <p><strong>Pedidos Anteriores:</strong></p>
+              <ul>${pedidosAnterioresHtml}</ul>
             </div>
-          ` : ''}
+          </div>
         </div>
       `;
-      container.appendChild(card);
     }
 
-  } catch (error) {
-    console.error("Erro ao carregar histórico de clientes:", error);
-    container.innerHTML = "<p>Erro ao carregar histórico.</p>";
+    container.innerHTML = html;
+
+  } catch (erro) {
+    console.error('Erro ao carregar histórico de clientes:', erro);
+    container.innerHTML = '<p>Erro ao carregar histórico de clientes.</p>';
   }
 }
 
-function toggleDetalhes(button) {
-  const detalhes = button.nextElementSibling;
-  detalhes.style.display = (detalhes.style.display === "none" || detalhes.style.display === "") ? "block" : "none";
-}
+document.getElementById('clienteSearchInput').addEventListener('input', function() {
+  const filtro = this.value.toLowerCase();
+  const cards = document.querySelectorAll('#clientesCardsContainer .pedido-card');
 
-carregarHistoricoClientes();
-
-
-window.excluirPedido = async function(id) {
-    const confirmar = confirm("Tem certeza que deseja excluir este pedido?");
-    if (!confirmar) return;
-
-    try {
-      await deleteDoc(doc(db, "pedidos", id));
-      alert("Pedido excluído com sucesso!");
-      // Atualize a tela:
-      location.reload(); // ou uma função de recarregar os pedidos dinamicamente
-    } catch (erro) {
-      console.error("Erro ao excluir pedido:", erro);
-      alert("Erro ao excluir pedido.");
+  cards.forEach(card => {
+    const textoCard = card.textContent.toLowerCase();
+    if (textoCard.includes(filtro)) {
+      card.style.display = ''; // mostra
+    } else {
+      card.style.display = 'none'; // esconde
     }
-  };
-
-
-  document.getElementById('searchInput').addEventListener('input', function () {
-    const filtro = this.value.toLowerCase();
-    const cards = document.querySelectorAll('#cardsContainer .pedido-card');
-
-    cards.forEach(card => {
-      const texto = card.innerText.toLowerCase();
-      if (texto.includes(filtro)) {
-        card.style.display = '';
-      } else {
-        card.style.display = 'none';
-      }
-    });
   });
-
-
-
-  //aqui fica o estoque 
-
-async function cadastrarProdutoEstoque(id, nome, quantidadeInicial) {
-  const produto = {
-    id: id,
-    name: nome,
-    stock: parseInt(quantidadeInicial),
-    reserved: 0
-  };
-
-  try {
-    await setDoc(doc(db, 'estoque', id), produto);
-    alert(`✅ Produto "${nome}" cadastrado com sucesso!`);
-    document.getElementById("formCadastroProduto").reset();
-    carregarEstoque(); // se essa função existir
-  } catch (error) {
-    console.error("Erro ao cadastrar produto:", error);
-    alert("❌ Erro ao salvar produto no estoque.");
-  }
-}
-
-// Captura o envio do formulário
-document.getElementById("formCadastroProduto").addEventListener("submit", function (e) {
-  e.preventDefault();
-  const id = document.getElementById("inputId").value.trim();
-  const nome = document.getElementById("inputNome").value.trim();
-  const quantidade = document.getElementById("inputQuantidade").value;
-
-  if (id && nome && quantidade > 0) {
-    cadastrarProdutoEstoque(id, nome, quantidade);
-  }
 });
 
 
-async function carregarEstoque() {
-  const tbody = document.getElementById("inventoryBody");
-  tbody.innerHTML = "";
 
+async function atualizarEstoque(produtoId, novaQuantidade) {
   try {
-    const snapshot = await getDocs(collection(db, "estoque"));
-    
-    snapshot.forEach(docSnap => {
-      const produto = docSnap.data();
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${produto.id}</td>
-        <td>${produto.name || produto.nome}</td>
-        <td>${produto.stock ?? produto.quantidade}</td>
-        <td>${produto.reserved ?? produto.reservado}</td>
-        <td>
-          <button class="btn btn-sm btn-danger" onclick="removerProduto('${produto.id}')">🗑️</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
+    const estoqueRef = doc(db, 'estoque', produtoId);
+    await updateDoc(estoqueRef, {
+      stock: novaQuantidade
     });
-  } catch (error) {
-    console.error("Erro ao carregar estoque:", error);
-    tbody.innerHTML = "<tr><td colspan='5'>Erro ao carregar estoque.</td></tr>";
+    renderInventory(); // Recarrega a tabela para mostrar a nova quantidade
+  } catch (erro) {
+    console.error("Erro ao atualizar estoque:", erro);
   }
 }
 
 
+window.abrirModalEditarEstoque = function(id, nome, quantidadeAtual) {
+  const modal = new bootstrap.Modal(document.getElementById('modalEditarEstoque'));
+  document.getElementById('produtoNomeModal').textContent = `Produto: ${nome}`;
+  document.getElementById('inputQuantidadeEstoque').value = quantidadeAtual;
+  document.getElementById('inputProdutoIdEstoque').value = id;
+  modal.show();
+};
 
+document.getElementById('formEditarEstoque').addEventListener('submit', async (event) => {
+  event.preventDefault();
 
+  const id = document.getElementById('inputProdutoIdEstoque').value;
+  const novaQuantidade = parseInt(document.getElementById('inputQuantidadeEstoque').value, 10);
 
+  if (isNaN(novaQuantidade) || novaQuantidade < 0) {
+    alert('Quantidade inválida!');
+    return;
+  }
 
-  
+  try {
+    const estoqueRef = doc(db, 'estoque', id);
+    await updateDoc(estoqueRef, { stock: novaQuantidade });
 
+    alert('Estoque atualizado com sucesso!');
+    renderInventory();
 
-
-
-
-
-
-
-
-
-
+    // Fecha o modal
+    const modalEl = document.getElementById('modalEditarEstoque');
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    modalInstance.hide();
+  } catch (erro) {
+    console.error('Erro ao atualizar estoque:', erro);
+    alert('Erro ao atualizar estoque. Veja o console para detalhes.');
+  }
+});
 
 window.toggleSidebar = function () {
   const sidebar = document.getElementById('sidebar');
@@ -1636,6 +1541,20 @@ window.toggleSidebar = function () {
   if (mainContent) mainContent.classList.toggle('collapsed');
 };
 
+
+window.excluirPedido = async function(pedidoId) {
+  const cleanId = pedidoId.replace(/^#/, ''); // tira # se tiver
+  if (!confirm("Tem certeza que deseja excluir este pedido?")) return;
+
+  try {
+    await deleteDoc(doc(db, 'pedidos', cleanId));
+    alert("Pedido excluído com sucesso.");
+    carregarPedidos(); // recarrega a lista atualizada
+  } catch (erro) {
+    console.error("Erro ao excluir pedido:", erro);
+    alert("Erro ao excluir pedido. Veja o console para detalhes.");
+  }
+};
 
 
 
