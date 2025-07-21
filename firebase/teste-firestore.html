@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Teste Firestore</title>
+</head>
+<body>
+  <h1>Produtos da Subcoleção "cadastros/produtos/produto"</h1>
+  <pre id="output">Carregando...</pre>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDimXW0l-O_tmRhNH-WWgZqXGucX3Zk4hc",
+      authDomain: "panelinha-fe407.firebaseapp.com",
+      projectId: "panelinha-fe407",
+      storageBucket: "panelinha-fe407.appspot.com",
+      messagingSenderId: "1006485480860",
+      appId: "1:1006485480860:web:ded54166d6bfad4f649459",
+      measurementId: "G-BM581Q8TKX"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function carregarProdutosDisponiveis() {
+      const output = document.getElementById('output');
+      try {
+        const snapshot = await getDocs(collection(db, "cadastros", "produtos", "produto"));
+        const produtos = [];
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.disponivel === true) {
+            produtos.push({ id: doc.id, ...data });
+          }
+        });
+
+        if (produtos.length === 0) {
+          output.innerText = "Nenhum produto disponível encontrado.";
+        } else {
+          output.innerText = JSON.stringify(produtos, null, 2);
+        }
+
+      } catch (error) {
+        console.error("Erro ao carregar produtos:", error);
+        output.innerText = "Erro ao carregar produtos: " + error.message;
+      }
+    }
+
+    carregarProdutosDisponiveis();
+  </script>
+</body>
+</html>
