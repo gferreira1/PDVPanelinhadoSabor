@@ -1,44 +1,57 @@
 <?php
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
 
 try {
-    $data = json_decode(file_get_contents("php://input"), true);
-
-    if (!isset($data['image'])) {
-        echo json_encode(['success' => false, 'message' => 'Nenhuma imagem recebida']);
+    // Lê o corpo da requisição
+    $json = file_get_contents('php://input');
+    if (!$json) {
+        echo json_encode(['success' => false, 'message' => 'Nenhum dado recebido']);
         exit;
     }
 
-    // Remove prefixo base64
-    $imageData = str_replace('data:image/jpeg;base64,', '', $data['image']);
-    $imageData = str_replace(' ', '+', $imageData);
-    $image = base64_decode($imageData);
+    $data = json_decode($json, true);
+    if (!isset($data['image'])) {
+        echo json_encode(['success' => false, 'message' => 'Imagem não recebida']);
+        exit;
+    }
 
-    if ($image === false) {
+    $imgData = $data['image'];
+
+    // Remove o prefixo do base64
+    $imgData = str_replace('data:image/jpeg;base64,', '', $imgData);
+    $imgData = str_replace(' ', '+', $imgData);
+    $decodedData = base64_decode($imgData);
+
+    if (!$decodedData) {
         echo json_encode(['success' => false, 'message' => 'Erro ao decodificar imagem']);
         exit;
     }
 
-    // Caminho da pasta
-    $baseDir = __DIR__ . '/../imagens';
-    $monthDir = $baseDir . '/NF' . date('Y-m');
-
-    // Cria a pasta se não existir
-    if (!is_dir($monthDir)) {
-        mkdir($monthDir, 0777, true);
+    // Caminho da pasta onde salvar
+    $folder = __DIR__ . '/../imagens/NF2025-11/';
+    if (!file_exists($folder)) {
+        mkdir($folder, 0777, true);
     }
 
-    $filename = $monthDir . '/nota_' . date('Ymd_His') . '.jpg';
+    // Nome do arquivo com data/hora
+    $fileName = 'nota_' . date('Ymd_His') . '.jpg';
+    $filePath = $folder . $fileName;
 
-    if (file_put_contents($filename, $image)) {
+    // Salva a imagem
+    if (file_put_contents($filePath, $decodedData)) {
         echo json_encode([
             'success' => true,
             'message' => 'Imagem salva com sucesso!',
-            'file' => 'imagens/NF' . date('Y-m') . '/' . basename($filename)
+            'file' => 'imagens/NF2025-11/' . $fileName
         ]);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Erro ao salvar imagem']);
+        echo json_encode(['success' => false, 'message' => 'Erro ao salvar imagem no servidor']);
     }
-} catch (Throwable $e) {
-    echo json_encode(['success' => false, 'message' => 'Exceção: ' . $e->getMessage()]);
+
+} catch (Exception $e) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Exceção: ' . $e->getMessage()
+    ]);
 }
