@@ -1,0 +1,634 @@
+:root {
+      --sidebar-width: 250px;
+      --sidebar-width-collapsed: 70px;
+      --bg-color: #1f2937;
+      --item-bg: #374151;
+      --item-hover: #4b5563;
+      --accent: #3b82f6;
+      --text-light: #e5e7eb;
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      background: #f3f4f6;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* === SIDEBAR === */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--bg-color);
+      color: var(--text-light);
+      display: flex;
+      flex-direction: column;
+      transition: width .3s;
+      overflow: hidden;
+      z-index: 1000;
+    }
+    .sidebar.collapsed { width: var(--sidebar-width-collapsed); }
+
+    /* Header com botão e título */
+    .sidebar .header {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      gap: 0.5rem;
+    }
+    .sidebar .header button {
+      background: none;
+      border: none;
+      color: var(--text-light);
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    .sidebar .header .title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      white-space: nowrap;
+      transition: opacity .3s;
+    }
+    .sidebar.collapsed .header .title { opacity: 0; }
+
+    /* Seção “Negócios” */
+    .sidebar .business {
+      padding: 0 1rem 1rem;
+      border-bottom: 1px solid #374151;
+    }
+    .sidebar .business .name,
+    .sidebar .business .subtitle {
+      white-space: nowrap;
+      transition: opacity .3s;
+    }
+    .sidebar .business .name { font-weight: 600; }
+    .sidebar .business .subtitle { font-size: .75rem; color: #9ca3af; }
+    .sidebar.collapsed .business .name,
+    .sidebar.collapsed .business .subtitle { opacity: 0; }
+
+    /* Itens do menu */
+    .sidebar nav .nav-link {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .75rem 1rem;
+      color: var(--text-light);
+      background: var(--item-bg);
+      margin: .25rem 1rem;
+      border-radius: .5rem;
+      text-decoration: none;
+      transition: background .2s, color .2s;
+    }
+    .sidebar nav .nav-link i {
+      font-size: 1.2rem;
+      min-width: 1.2rem;
+      text-align: center;
+    }
+    .sidebar nav .nav-link span {
+      white-space: nowrap;
+      transition: opacity .3s;
+    }
+    .sidebar nav .nav-link:hover { background: var(--item-hover); }
+    .sidebar nav .nav-link.active { background: var(--accent); color: #fff; }
+    .sidebar.collapsed nav .nav-link span { opacity: 0; }
+
+    /* Footer versão e ícones */
+    .sidebar .footer {
+      margin-top: auto;
+      padding: 1rem;
+      border-top: 1px solid #374151;
+    }
+    .sidebar .footer .version {
+      font-size: .7rem;
+      color: #9ca3af;
+      transition: opacity .3s;
+    }
+    .sidebar.collapsed .footer .version { opacity: 0; }
+    .sidebar .footer .actions {
+      display: flex;
+      gap: .5rem;
+      margin-top: .5rem;
+    }
+    .sidebar .footer .actions a { color: var(--text-light); font-size: 1.2rem; }
+
+    /* Main content empurra */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 1.5rem;
+      width: 100%;
+      transition: margin-left .3s;
+    }
+    .main-content.collapsed { margin-left: var(--sidebar-width-collapsed); }
+
+    /* === CARDS DE PEDIDO === */
+    .pedido-card {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      border: 3px solid #ccc;
+      transition: 0.3s;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .status-recebido { border-color: #f1c40f !important; }
+    .status-pronto   { border-color: #2ecc71 !important; }
+    .status-cancelado{ border-color: #e74c3c !important; }
+    .pedido-info h5  { margin: 0 0 10px; font-size: 18px; }
+    .pedido-info p   { margin: 2px 0; font-size: 14px; }
+
+    .btn-status {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-status:hover:not(:disabled) {
+  transform: scale(1.03);
+}
+
+.btn-status:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Estilo para botão Comprar */
+.btn-status.buy {
+  background-color: #4CAF50; /* verde */
+}
+
+.btn-status.buy:hover:not(:disabled) {
+  background-color: #43a047;
+}
+
+/* Estilo para botão Reservar */
+.btn-status.reserve {
+  background-color: #2196F3; /* azul */
+}
+
+.btn-status.reserve:hover:not(:disabled) {
+  background-color: #1e88e5;
+}
+
+.detalhes-pedido {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease, margin-top 0.3s ease;
+  padding: 0 12px;
+  margin-top: 0;
+}
+
+.detalhes-pedido.show {
+  max-height: 500px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+
+    /* Ajustes icons collapsed */
+.sidebar.collapsed nav .nav-link {
+  width: 100%;
+  justify-content: center;
+  padding: 0.75rem 0;
+  margin: .25rem 0.5rem;
+}
+
+.sidebar.collapsed nav .nav-link i {
+  margin: 0 auto;
+  display: block;
+}
+
+.sidebar.collapsed nav .nav-link span {
+  display: none;
+}
+
+
+    /* =====================================
+   Estilo exclusivo para os Cards de Histórico de Clientes
+   ===================================== */
+
+/* Área dos cards dentro da seção de clientes */
+#clientsSection .cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+/* Cada card de cliente */
+#clientsSection .pedido-card {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  flex: 1 1 300px;
+  max-width: 350px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+#clientsSection .pedido-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Informações internas */
+#clientsSection .pedido-info h5 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+#clientsSection .pedido-info p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+/* Botão Ver Mais / Ver Menos */
+#clientsSection .btn-detalhes {
+  margin-top: 10px;
+  background-color: #42cdac;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#clientsSection .btn-detalhes:hover {
+  background-color: #36b59b;
+}
+
+/* Detalhes do pedido (escondido inicialmente) */
+#clientsSection .detalhes-pedido {
+  display: none;
+  margin-top: 15px;
+}
+
+/* Lista de pedidos anteriores */
+#clientsSection .detalhes-pedido ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+#clientsSection .detalhes-pedido li {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Botão Pedir Novamente */
+#clientsSection .detalhes-pedido button {
+  margin-left: 10px;
+  background-color: #bfc1d5;
+  color: #333;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#clientsSection .detalhes-pedido button:hover {
+  background-color: #a7a9ba;
+}
+
+.container-estoque {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  padding: 30px;
+  max-width: 1000px;
+  margin: 40px auto;
+}
+
+.header-estoque {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header-estoque h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.btn-fechar {
+  background-color: #ff5c5c;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-fechar:hover {
+  background-color: #e04848;
+}
+
+.tabela-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+thead {
+  background-color: #f2f2f2;
+}
+
+th, td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  font-weight: bold;
+  color: #333;
+}
+
+.acoes {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn:hover {
+  background-color: #45a049;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .container-estoque {
+    padding: 20px;
+  }
+
+  th, td {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .btn-fechar {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+/* Área dos coluna dentro da seção de pedidos */
+.status-columns {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  padding-bottom: 15px;
+}
+.status-column {
+  min-width: 300px;
+  flex: 1;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 15px;
+}
+.status-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: bold;
+}
+.recebido-header {
+  color: #856404;
+  background-color: #fff3cd;
+  padding: 8px;
+  border-radius: 5px;
+}
+.producao-header {
+  color: #004085;
+  background-color: #cce5ff;
+  padding: 8px;
+  border-radius: 5px;
+}
+.finalizado-header {
+  color: #155724;
+  background-color: #d4edda;
+  padding: 8px;
+  border-radius: 5px;
+}
+.pedido-card {
+  margin-bottom: 15px;
+}
+
+
+
+/* Estilos para as colunas */
+.status-columns {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  padding-bottom: 15px;
+}
+
+.status-column {
+  min-width: 320px;
+  flex: 1;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.status-header {
+  text-align: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.recebido-header {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.producao-header {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.finalizado-header {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+/* Estilos para os cards */
+.pedido-card {
+  background-color: white;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  border-left: 4px solid;
+}
+
+.status-recebido {
+  border-left-color: #ffc107;
+}
+
+.status-producao {
+  border-left-color: #0d6efd;
+}
+
+.status-finalizado {
+  border-left-color: #198754;
+}
+
+.detalhes-pedido {
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.pedido-actions .btn {
+  transition: all 0.2s;
+}
+
+/* Responsividade */
+@media (max-width: 992px) {
+  .status-column {
+    min-width: 280px;
+  }
+}
+
+
+.detalhes-pedido {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  padding: 0 12px;
+  margin-top: 0;
+}
+
+.detalhes-pedido.show {
+  max-height: 500px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.card-produto {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 4px; /* Pouquíssimo padding */
+  margin-bottom: 0; /* Sem margem inferior */
+  max-width: 220px;
+  box-shadow: none; /* Sem sombra para ficar mais limpo */
+  display: inline-block;
+  vertical-align: top;
+  text-align: center;
+  background-color: #fff;
+  transition: none;
+}
+
+.card-produto img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 2px; /* Margem mínima */
+}
+
+.card-produto strong {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 2px; /* Margem mínima */
+}
+
+.card-produto .preco {
+  font-weight: 600;
+  margin-bottom: 2px; /* Margem mínima */
+  color: #2c3e50;
+}
+
+.disponibilidade-label {
+  font-size: 0.85rem;
+  user-select: none;
+  margin-bottom: 2px;
+}
+
+.disponibilidade-label input {
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+#listaCardapio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px; /* Espaçamento pequeno entre cards */
+  justify-content: flex-start;
+}
+
+
+.btn-toggle {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+  color: white;
+}
+
+.btn-toggle.disponivel {
+  background-color: #28a745; /* verde */
+}
+
+.btn-toggle.indisponivel {
+  background-color: #6c757d; /* cinza escuro */
+}
+
+.btn-toggle:hover {
+  opacity: 0.85;
+}
+
+
+.esgotado-label {
+  font-weight: bold;
+  color: red;
+  margin-top: 8px;
+}
+
+.card-produto .dropdown {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+.card-produto {
+  position: relative;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  margin: 10px;
+  background: #fff;
+  box-shadow: 0 0 4px rgba(0,0,0,0.05);
+}
