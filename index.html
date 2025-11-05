@@ -249,6 +249,17 @@
     </table>
   </div>
 
+
+  <!-- Modal de mensagem -->
+<div id="modalMensagem" class="modalNF">
+  <div class="modal-contentNF">
+    <span id="fecharModal" class="closeNF">&times;</span>
+    <h3 id="tituloModalNF">Resultado</h3>
+    <p id="textoModalNF"></p>
+  </div>
+</div>
+
+
   <!-- Modal para editar estoque -->
   <div class="modal fade" id="modalEditarEstoque" tabindex="-1" aria-labelledby="modalEditarEstoqueLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -1118,6 +1129,58 @@ if (btnAbrir && btnTirar) {
     }
   });
 }
+
+function abrirModalNF(titulo, mensagem, sucesso) {
+  const modal = document.getElementById('modalMensagem');
+  const tituloEl = document.getElementById('tituloModalNF');
+  const textoEl = document.getElementById('textoModalNF');
+  
+  tituloEl.textContent = titulo;
+  textoEl.textContent = mensagem;
+  textoEl.style.color = sucesso ? 'green' : 'red';
+
+  modal.style.display = 'flex';
+
+  // Fechar modal ao clicar no X
+  document.getElementById('fecharModal').onclick = () => {
+    modal.style.display = 'none';
+  };
+
+  // Fechar se clicar fora do conteúdo
+  modal.onclick = (e) => {
+    if (e.target === modal) modal.style.display = 'none';
+  };
+}
+
+// Dentro do seu btnTirar.addEventListener
+try {
+  const response = await fetch('./backend/salvar-nota.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: dataUrl })
+  });
+
+  const text = await response.text();
+  console.log('Resposta bruta do PHP:', text);
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error('Resposta inválida: ' + text);
+  }
+
+  abrirModalNF(
+    data.success ? 'Sucesso!' : 'Erro!',
+    data.message,
+    data.success
+  );
+
+} catch (err) {
+  console.error('Erro no envio:', err);
+  abrirModalNF('Erro', 'Falha ao salvar: ' + err.message, false);
+}
+
 
 ``
 
