@@ -1060,12 +1060,23 @@ const mensagemNF = document.getElementById('mensagemNF');
 if (btnAbrir && btnTirar) {
   btnAbrir.addEventListener('click', async () => {
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Força o uso da câmera traseira (environment)
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { exact: "environment" } }
+      });
       video.srcObject = stream;
       btnTirar.disabled = false;
       mensagemNF.textContent = '';
     } catch (err) {
-      alert('Erro ao acessar a câmera: ' + err.message);
+      console.warn('Erro ao acessar a câmera traseira, tentando padrão...');
+      // fallback — se não tiver traseira, abre a padrão
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        btnTirar.disabled = false;
+      } catch (erro2) {
+        alert('Erro ao acessar a câmera: ' + erro2.message);
+      }
     }
   });
 
@@ -1095,6 +1106,8 @@ if (btnAbrir && btnTirar) {
       });
   });
 }
+``
+
 
 
 
