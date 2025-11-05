@@ -1045,6 +1045,60 @@ window.excluirPedido = async function(pedidoId) {
 
 
 
+
+
+
+
+let stream;
+const video = document.getElementById('cameraPreview');
+const canvas = document.getElementById('cameraCanvas');
+const preview = document.getElementById('previewFoto');
+const btnAbrir = document.getElementById('abrirCamera');
+const btnTirar = document.getElementById('tirarFoto');
+const mensagemNF = document.getElementById('mensagemNF');
+
+if (btnAbrir && btnTirar) {
+  btnAbrir.addEventListener('click', async () => {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+      btnTirar.disabled = false;
+      mensagemNF.textContent = '';
+    } catch (err) {
+      alert('Erro ao acessar a câmera: ' + err.message);
+    }
+  });
+
+  btnTirar.addEventListener('click', () => {
+    const context = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const dataUrl = canvas.toDataURL('image/jpeg');
+    preview.src = dataUrl;
+    preview.style.display = 'block';
+
+    fetch('./backend/salvar-nota.php', {
+      method: 'POST',
+      body: JSON.stringify({ image: dataUrl }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then(res => res.json())
+      .then(data => {
+        mensagemNF.textContent = data.message;
+        mensagemNF.style.color = data.success ? 'green' : 'red';
+      })
+      .catch(err => {
+        mensagemNF.textContent = 'Erro ao salvar: ' + err.message;
+        mensagemNF.style.color = 'red';
+      });
+  });
+}
+
+
+
+
 </script>
 
 
