@@ -1091,69 +1091,34 @@ function abrirModalNF(titulo, mensagem, sucesso) {
   };
 }
 
-// 🔹 Lógica da câmera
-if (btnAbrir && btnTirar) {
-  btnAbrir.addEventListener('click', async () => {
-    try {
-      // Tenta abrir a câmera traseira
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { exact: 'environment' } }
-      });
-      video.srcObject = stream;
-      btnTirar.disabled = false;
-      mensagemNF.textContent = '';
-    } catch (err) {
-      console.warn('Erro ao acessar a câmera traseira, tentando padrão...');
-      // fallback
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
-        btnTirar.disabled = false;
-      } catch (erro2) {
-        alert('Erro ao acessar a câmera: ' + erro2.message);
-      }
-    }
+try {
+  const response = await fetch('./backend/salvar-nota.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: dataUrl })
   });
 
-  btnTirar.addEventListener('click', async () => {
-    const context = canvas.getContext('2d');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const text = await response.text();
 
-    const dataUrl = canvas.toDataURL('image/jpeg');
-    preview.src = dataUrl;
-    preview.style.display = 'block';
+  // 🔍 Mostra o que o PHP realmente devolveu (mesmo se for erro HTML)
+  abrirModalNF('📩 Resposta do PHP', text || '⚠️ Resposta vazia', false);
 
-    try {
-      const response = await fetch('./backend/salvar-nota.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: dataUrl })
-      });
+  let data;
+  try {
+    data = JSON.parse(text);
+    abrirModalNF(
+      data.success ? '✅ Sucesso!' : '❌ Erro!',
+      data.message,
+      data.success
+    );
+  } catch {
+    abrirModalNF('❌ Resposta inválida do PHP', text, false);
+  }
 
-      const text = await response.text();
-      console.log('📩 Resposta bruta do PHP:', text);
-
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error('PHP retornou resposta inválida: ' + text);
-      }
-
-      abrirModalNF(
-        data.success ? '✅ Sucesso!' : '❌ Erro!',
-        data.message,
-        data.success
-      );
-
-    } catch (err) {
-      console.error('🚫 Erro no envio:', err);
-      abrirModalNF('Erro', 'Falha ao salvar: ' + err.message, false);
-    }
-  });
+} catch (err) {
+  abrirModalNF('🚫 Erro no envio', 'Falha: ' + err.message, false);
 }
+
 
 
 
