@@ -10,14 +10,14 @@ if (!$imageData) {
     exit;
 }
 
-// Remove o prefixo base64
+// Remove prefixo base64
 $image = str_replace('data:image/jpeg;base64,', '', $imageData);
 $image = str_replace(' ', '+', $image);
 $image = base64_decode($image);
 
-// Caminho para salvar (ajuste conforme seu ambiente)
-$baseDir = __DIR__ . '/../imagens'; // sobe 1 nível e vai pra /imagens
-$subDir = 'NF' . date('Y-m');       // cria pasta tipo NF2025-11
+// Caminho base para salvar as imagens
+$baseDir = __DIR__ . '/../imagens'; // Ajuste conforme sua estrutura
+$subDir = 'NF' . date('Y-m');
 $dir = $baseDir . '/' . $subDir;
 
 // Cria a pasta se não existir
@@ -44,4 +44,3 @@ if (file_put_contents($filename, $image)) {
         'writable' => is_writable($dir)
     ]);
 }
-?>
