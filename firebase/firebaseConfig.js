@@ -18,5 +18,14 @@ const app = initializeApp(firebaseConfig);
 // 🔥 Inicializa o Firestore
 const db = getFirestore(app);
 
+// 🔥 Expor Firebase no console
+window._db = db;
+window._collection = collection;
+window._getDocs = getDocs;
+window._doc = doc;
+window._updateDoc = updateDoc;
+window._query = query;
+window._where = where;
+
 // 🔥 Exporta o banco (NÃO é default!)
 export { db };
