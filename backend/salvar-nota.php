@@ -22,15 +22,6 @@ try {
     $imgData = str_replace('data:image/jpeg;base64,', '', $imgData);
     $imgData = str_replace(' ', '+', $imgData);
     $decodedData = base64_decode($imgData);
-// Remove o prefixo base64
-$image = str_replace('data:image/jpeg;base64,', '', $imageData);
-$image = str_replace(' ', '+', $image);
-$image = base64_decode($image);
-
-// Caminho para salvar (ajuste conforme seu ambiente)
-$baseDir = __DIR__ . '/../imagens'; // sobe 1 nível e vai pra /imagens
-$subDir = 'NF' . date('Y-m');       // cria pasta tipo NF2025-11
-$dir = $baseDir . '/' . $subDir;
 
     if (!$decodedData) {
         echo json_encode(['success' => false, 'message' => 'Erro ao decodificar imagem']);
@@ -64,4 +55,3 @@ $dir = $baseDir . '/' . $subDir;
         'message' => 'Exceção: ' . $e->getMessage()
     ]);
 }
-?>
