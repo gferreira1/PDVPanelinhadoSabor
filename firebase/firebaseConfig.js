@@ -1,7 +1,3 @@
-// firebase/firebaseConfig.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyDimXW0l-O_tmRhNH-WWgZqXGucX3Zk4hc",
   authDomain: "panelinha-fe407.firebaseapp.com",
@@ -11,3 +7,5 @@ const firebaseConfig = {
   appId: "1:1006485480860:web:ded54166d6bfad4f649459",
   measurementId: "G-BM581Q8TKX"
 };
+
+export default firebaseConfig;

@@ -71,17 +71,13 @@
     </section>
 
     <!-- Seção de Clientes -->
- <section id="clientsSection" style="display:none;">
+    <section id="clientsSection" style="display:none;">
   <div class="container-fluid">
     <h2 class="mb-4">Histórico de Clientes</h2>
 
+    <!-- Campo de Pesquisa -->
     <div class="mb-3">
-      <input 
-        type="text" 
-        id="clienteSearchInput" 
-        class="form-control"
-        placeholder="Pesquisar cliente por nome ou telefone..."
-      >
+      <input type="text" id="clienteSearchInput" class="form-control" placeholder="Pesquisar cliente por nome ou telefone...">
     </div>
 
     <div class="cards-container" id="clientesCardsContainer">
@@ -89,7 +85,6 @@
     </div>
   </div>
 </section>
-
 
 
     <!-- Seção de Imprimir QR Code -->
@@ -203,7 +198,7 @@
         <select class="form-select" id="categoriaProduto" required>
           <option value="">Selecione...</option>
           <option value="Bolo de Pote">Bolo de Pote</option>
-          <option value="Torta">Torta</option>
+          <option value="Pizza">Pizza</option>
           <option value="Bebida">Bebida</option>
         </select>
       </div>
@@ -253,17 +248,6 @@
       </tbody>
     </table>
   </div>
-
-
-  <!-- Modal de mensagem -->
-<div id="modalMensagem" class="modalNF">
-  <div class="modal-contentNF">
-    <span id="fecharModal" class="closeNF">&times;</span>
-    <h3 id="tituloModalNF">Resultado</h3>
-    <p id="textoModalNF"></p>
-  </div>
-</div>
-
 
   <!-- Modal para editar estoque -->
   <div class="modal fade" id="modalEditarEstoque" tabindex="-1" aria-labelledby="modalEditarEstoqueLabel" aria-hidden="true">
@@ -380,11 +364,11 @@ document.addEventListener('DOMContentLoaded', () => {
     setActiveSection('ProdutoSection', e.target);
   });
 
-  //montarEstruturaPedidos();
-  //carregarPedidos();
+  montarEstruturaPedidos();
+  carregarPedidos();
   renderInventory();
-  //carregarHistoricoClientes();
-  //carregarCardapio();
+  carregarHistoricoClientes();
+  carregarCardapio();
 });
 
 async function renderInventory() {
@@ -453,7 +437,167 @@ window.reserveProduct = async function(id) {
   renderInventory();
 };
 
+  function montarEstruturaPedidos() {
+    const ordersSection = document.getElementById('ordersSection');
+    ordersSection.innerHTML = `
+      <div class="container-fluid">
+        <div class="status-columns">
+          <div class="status-column">
+            <div class="recebido-header status-header">
+              <i class="bi bi-hourglass-top me-2"></i>Recebido
+            </div>
+            <div id="recebidos-container" class="pedidos-container"></div>
+          </div>
+          <div class="status-column">
+            <div class="producao-header status-header">
+              <i class="bi bi-gear-wide-connected me-2"></i>Em Produção
+            </div>
+            <div id="producao-container" class="pedidos-container"></div>
+          </div>
+          <div class="status-column">
+            <div class="finalizado-header status-header">
+              <i class="bi bi-check-circle me-2"></i>Finalizadoo
+            </div>
+            <div id="finalizado-container" class="pedidos-container"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
 
+async function carregarPedidos() {
+  const pedidosSnapshot = await getDocs(collection(db, 'pedidos'));
+  const pedidos = pedidosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+  const recebidosContainer = document.getElementById('recebidos-container');
+  const producaoContainer = document.getElementById('producao-container');
+  const finalizadoContainer = document.getElementById('finalizado-container');
+
+  if (!recebidosContainer || !producaoContainer || !finalizadoContainer) return;
+
+  recebidosContainer.innerHTML = '';
+  producaoContainer.innerHTML = '';
+  finalizadoContainer.innerHTML = '';
+
+  const hoje = new Date();
+  const mesAtual = hoje.getMonth() + 1; // 1 a 12
+  const anoAtual = hoje.getFullYear();
+
+  let totalRecebidos = 0;
+  let totalProducao = 0;
+  let totalFinalizadosMes = 0;
+
+  // Ordena do mais recente para o mais antigo
+  pedidos.sort((a, b) => {
+    const dataA = a.data ? new Date(a.data.split('/').reverse().join('-')) : new Date(0);
+    const dataB = b.data ? new Date(b.data.split('/').reverse().join('-')) : new Date(0);
+    return dataB - dataA; // mais recente primeiro
+  });
+
+  pedidos.forEach(pedido => {
+    const status = typeof pedido.status === 'string' ? pedido.status.toLowerCase() : 'desconhecido';
+
+    const itensFormatados = (Array.isArray(pedido.itens)
+      ? pedido.itens
+      : (typeof pedido.itens === 'string' ? pedido.itens.split(',') : [])
+    ).map(item => {
+      if (typeof item === 'object' && item !== null) {
+        const nome = item.nome || item.produto || 'Item';
+        const qtd = item.quantidade || item.qtd || 1;
+        return `<li>• ${qtd}x ${nome}</li>`;
+      } else {
+        return `<li>• ${String(item).trim()}</li>`;
+      }
+    }).join('');
+
+    const cardHTML = `
+      <div class="pedido-card status-${status}">
+        <div class="pedido-info">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h5 class="mb-2">${pedido.id}</h5>
+              <small class="text-muted"><strong>Data:</strong> ${pedido.data || ''}</small><br>  
+              <small class="text-muted">${pedido.horario || ''}</small>
+            </div>
+
+            ${status === 'recebido' ? `
+              <div class="dropdown ms-2">
+                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <a class="dropdown-item text-danger" href="#" onclick="excluirPedido('${pedido.id}')">
+                      🗑 Cancelar Pedido
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            ` : ''}
+
+          </div>
+
+          <p class="mb-1"><strong>Cliente:</strong> ${pedido.cliente}</p>
+          <p class="mb-2"><strong>Valor:</strong> ${pedido.valor}</p>        
+          <div class="detalhes-pedido ${status !== 'finalizado' ? 'show' : ''}">
+            <div class="border-top pt-2 mt-2">
+              <p class="mb-1"><strong>Itens:</strong></p>
+              <ul class="list-unstyled ps-3">
+                ${itensFormatados}
+              </ul>
+              <p class="mb-1"><strong>Pagamento:</strong> ${pedido.pagamento || 'Não informado'}</p>
+              ${pedido.observacoes ? `<p class="mb-1"><strong>Observações:</strong> ${pedido.observacoes}</p>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div class="pedido-actions mt-2">
+          ${status === 'recebido' ? `
+            <button class="btn btn-sm btn-primary w-100 mb-2" onclick="mudarStatus('${pedido.id}', 'producao')">
+              <i class="bi bi-play-fill me-1"></i> Produzir
+            </button>
+          ` : ''}
+
+          ${status === 'producao' ? `
+            <button class="btn btn-sm btn-success w-100 mb-2" onclick="mudarStatus('${pedido.id}', 'finalizado')">
+              <i class="bi bi-check-lg me-1"></i> Finalizar
+            </button>
+          ` : ''}
+
+          <button class="btn btn-sm btn-outline-secondary btn-detalhes w-100" onclick="toggleDetalhes(this)">
+            <i class="bi bi-list-ul me-1"></i> Detalhes
+          </button>
+        </div>
+      </div>
+    `;
+
+    if (status === 'recebido') {
+      recebidosContainer.insertAdjacentHTML('beforeend', cardHTML);
+      totalRecebidos++;
+    } else if (status === 'producao') {
+      producaoContainer.insertAdjacentHTML('beforeend', cardHTML);
+      totalProducao++;
+    } else if (status === 'finalizado') {
+      // Filtra apenas do mês atual
+      if (pedido.data) {
+        const [dia, mes, ano] = pedido.data.split('/').map(Number);
+        if (mes === mesAtual && ano === anoAtual) {
+          finalizadoContainer.insertAdjacentHTML('beforeend', cardHTML);
+          totalFinalizadosMes++;
+        }
+      }
+    }
+  });
+
+  // Atualiza os headers com a quantidade
+  const headerRecebidos = document.querySelector('.recebido-header');
+  const headerProducao = document.querySelector('.producao-header');
+  const headerFinalizado = document.querySelector('.finalizado-header');
+
+  if (headerRecebidos) headerRecebidos.innerHTML = `<i class="bi bi-hourglass-top me-2"></i>Recebido (${totalRecebidos})`;
+  if (headerProducao) headerProducao.innerHTML = `<i class="bi bi-gear-wide-connected me-2"></i>Em Produção (${totalProducao})`;
+  if (headerFinalizado) headerFinalizado.innerHTML = `<i class="bi bi-check-circle me-2"></i>Finalizado (${totalFinalizadosMes})`;
+}
 
 
 
@@ -682,9 +826,147 @@ async function corrigirProdutosAntigos() {
 
 
 
+async function carregarHistoricoClientes() {
+  const container = document.querySelector('#clientsSection .cards-container');
+  if (!container) return console.warn("Container histórico clientes não encontrado");
+
+  container.innerHTML = 'Carregando histórico de clientes...';
+
+  try {
+    const snapshot = await getDocs(collection(db, 'pedidos'));
+    if (snapshot.empty) {
+      container.innerHTML = '<p>Nenhum pedido encontrado no histórico.</p>';
+      return;
+    }
+
+    // Agrupa pedidos por cliente+telefone
+    const clientes = {};
+
+    console.log('Pedidos carregados do Firestore:', snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
 
+    snapshot.forEach(docSnap => {
+  const pedido = docSnap.data();
+  const id = docSnap.id;  // id do pedido
 
+  const nome = pedido.cliente || 'Cliente sem nome';
+  const telefone = pedido.telefone || 'Telefone não informado';
+  const endereco = pedido.endereco || 'Endereço não informado';
+  const dataPedido = pedido.data || '';
+  const itens = pedido.itens || [];
+  const valor = pedido.valor || 0;
+
+  const key = nome + '|' + telefone;
+
+  if (!clientes[key]) {
+    clientes[key] = {
+      nome,
+      telefone,
+      endereco,
+      pedidos: []
+    };
+  }
+
+  clientes[key].pedidos.push({
+    id,          // <-- aqui é onde o id do pedido deve entrar!
+    data: dataPedido,
+    itens,
+    valor
+  });
+});
+
+    // Monta o HTML de cada cliente
+    let html = '';
+    for (const key in clientes) {
+      const cliente = clientes[key];
+      const pedidosOrdenados = cliente.pedidos.sort((a,b) => {
+        // ordenar por data decrescente (mais recente primeiro)
+        return new Date(b.data.split('/').reverse().join('-')) - new Date(a.data.split('/').reverse().join('-'));
+      });
+
+      const ultimoPedido = pedidosOrdenados[0];
+      const pedidosAnteriores = pedidosOrdenados.slice(1);
+
+      // Soma total gasto
+      const totalGasto = pedidosOrdenados.reduce((acc, p) => {
+        // tenta converter para número — ajustar se seu formato for string "R$ 10,00"
+        let val = 0;
+        if (typeof p.valor === 'string') {
+          val = parseFloat(p.valor.replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+        } else {
+          val = p.valor;
+        }
+        return acc + val;
+      }, 0);
+
+      // Quantidade total pedidos
+      const qtdPedidos = pedidosOrdenados.length;
+
+      // Itens do último pedido (exemplo: lista nomes e quantidades)
+      const itensUltimoPedidoHtml = Array.isArray(ultimoPedido.itens)
+        ? ultimoPedido.itens.map(item => {
+          if (typeof item === 'object') {
+            const nomeItem = item.nome || item.produto || 'Item';
+            const qtd = item.quantidade || item.qtd || 1;
+            return `<li>• ${qtd}x ${nomeItem}</li>`;
+          } else {
+            return `<li>• ${item}</li>`;
+          }
+        }).join('')
+        : '';
+
+      // Pedidos anteriores listados só com data + itens simples
+      const pedidosAnterioresHtml = pedidosAnteriores.length > 0
+        ? pedidosAnteriores.map(p => `<li>${p.data} – ${Array.isArray(p.itens) ? p.itens.map(i => typeof i === 'object' ? i.nome || i.produto || 'Item' : i).join(', ') : p.itens}</li>`).join('')
+        : '<li>Sem pedidos anteriores</li>';
+
+      html += `
+        <div class="pedido-card">
+          <div class="pedido-info">
+            <h5 class="mb-1">Pedido: <strong>#${ultimoPedido.id}</strong></h5>
+            <h5>Cliente: ${cliente.nome}</h5>
+            <p><strong>Telefone:</strong> ${cliente.telefone}</p>
+            <p><strong>Endereço:</strong> ${cliente.endereco}</p>
+            <p><strong>Último Pedido:</strong></p>
+            <ul>${itensUltimoPedidoHtml}</ul>
+            <p><strong>Data:</strong> ${ultimoPedido.data}</p>
+            <p><strong>Quantidade:</strong> ${qtdPedidos}</p>
+            <p><strong>Total Gasto:</strong> R$ ${totalGasto.toFixed(2)}</p>
+
+            <button class="btn btn-sm btn-outline-secondary btn-detalhes w-100" onclick="toggleDetalhes(this)">
+              <i class="bi bi-list-ul me-1"></i> Detalhes
+            </button>
+
+            <div class="detalhes-pedido" style="display:none;">
+              <p><strong>Pedidos Anteriores:</strong></p>
+              <ul>${pedidosAnterioresHtml}</ul>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
+
+  } catch (erro) {
+    console.error('Erro ao carregar histórico de clientes:', erro);
+    container.innerHTML = '<p>Erro ao carregar histórico de clientes.</p>';
+  }
+}
+
+document.getElementById('clienteSearchInput').addEventListener('input', function() {
+  const filtro = this.value.toLowerCase();
+  const cards = document.querySelectorAll('#clientesCardsContainer .pedido-card');
+
+  cards.forEach(card => {
+    const textoCard = card.textContent.toLowerCase();
+    if (textoCard.includes(filtro)) {
+      card.style.display = ''; // mostra
+    } else {
+      card.style.display = 'none'; // esconde
+    }
+  });
+});
 
 
 
@@ -775,43 +1057,19 @@ const btnAbrir = document.getElementById('abrirCamera');
 const btnTirar = document.getElementById('tirarFoto');
 const mensagemNF = document.getElementById('mensagemNF');
 
-// 🔹 Função para abrir o modal de mensagem
-function abrirModalNF(titulo, mensagem, sucesso) {
-  const modal = document.getElementById('modalMensagem');
-  const tituloEl = document.getElementById('tituloModalNF');
-  const textoEl = document.getElementById('textoModalNF');
-
-  tituloEl.textContent = titulo;
-  textoEl.textContent = mensagem;
-  textoEl.style.color = sucesso ? 'green' : 'red';
-
-  modal.style.display = 'flex';
-
-  // Fechar ao clicar no X
-  document.getElementById('fecharModal').onclick = () => {
-    modal.style.display = 'none';
-  };
-
-  // Fechar clicando fora
-  modal.onclick = (e) => {
-    if (e.target === modal) modal.style.display = 'none';
-  };
-}
-
-// 🔹 Lógica da câmera
 if (btnAbrir && btnTirar) {
   btnAbrir.addEventListener('click', async () => {
     try {
-      // Tenta abrir a câmera traseira
+      // Força o uso da câmera traseira (environment)
       stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { exact: 'environment' } }
+        video: { facingMode: { exact: "environment" } }
       });
       video.srcObject = stream;
       btnTirar.disabled = false;
       mensagemNF.textContent = '';
     } catch (err) {
       console.warn('Erro ao acessar a câmera traseira, tentando padrão...');
-      // fallback
+      // fallback — se não tiver traseira, abre a padrão
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
@@ -822,7 +1080,7 @@ if (btnAbrir && btnTirar) {
     }
   });
 
-  btnTirar.addEventListener('click', async () => {
+  btnTirar.addEventListener('click', () => {
     const context = canvas.getContext('2d');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -832,36 +1090,23 @@ if (btnAbrir && btnTirar) {
     preview.src = dataUrl;
     preview.style.display = 'block';
 
-    try {
-      const response = await fetch('./backend/salvar-nota.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: dataUrl })
+    fetch('./backend/salvar-nota.php', {
+      method: 'POST',
+      body: JSON.stringify({ image: dataUrl }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then(res => res.json())
+      .then(data => {
+        mensagemNF.textContent = data.message;
+        mensagemNF.style.color = data.success ? 'green' : 'red';
+      })
+      .catch(err => {
+        mensagemNF.textContent = 'Erro ao salvar: ' + err.message;
+        mensagemNF.style.color = 'red';
       });
-
-      const text = await response.text();
-      console.log('📩 Resposta bruta do PHP:', text);
-
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error('PHP retornou resposta inválida: ' + text);
-      }
-
-      abrirModalNF(
-        data.success ? '✅ Sucesso!' : '❌ Erro!',
-        data.message,
-        data.success
-      );
-
-    } catch (err) {
-      console.error('🚫 Erro no envio:', err);
-      abrirModalNF('Erro', 'Falha ao salvar: ' + err.message, false);
-    }
   });
 }
-
+``
 
 
 
@@ -874,7 +1119,6 @@ if (btnAbrir && btnTirar) {
 
 
 
-<script type="module" src="./shared/app.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
 </body>
